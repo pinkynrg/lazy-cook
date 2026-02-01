@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lazy Cook - Weekly Recipes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍳 Lazy Cook</h1>
+            <p>Gestisci le tue ricette settimanali e la lista della spesa</p>
+        </header>
+
+        <main>
+            <!-- Recipe Management Section -->
+            <section class="recipes-section">
+                <h2>Ricette della Settimana</h2>
+                <div class="add-recipe-form">
+                    <input 
+                        type="text" 
+                        id="recipe-url" 
+                        placeholder="Incolla URL ricetta Giallo Zafferano o JSON-LD"
+                        class="recipe-input"
+                    >
+                    <button onclick="addRecipe()" class="btn btn-primary">Aggiungi Ricetta</button>
+                </div>
+                
+                <div id="recipes-container" class="recipes-grid">
+                    <!-- Recipes will be displayed here -->
+                </div>
+            </section>
+
+            <!-- Grocery List Section -->
+            <section class="grocery-section">
+                <div class="section-header">
+                    <h2>Lista della Spesa</h2>
+                    <button onclick="normalizeIngredients()" class="btn btn-secondary">
+                        🤖 Normalizza con AI
+                    </button>
+                </div>
+                
+                <div id="grocery-list" class="grocery-list">
+                    <p class="empty-state">Aggiungi ricette per generare la lista della spesa</p>
+                </div>
+                
+                <div class="grocery-actions">
+                    <button onclick="copyGroceryList()" class="btn btn-outline">
+                        📋 Copia Lista
+                    </button>
+                    <button onclick="exportGroceryList()" class="btn btn-outline">
+                        💾 Esporta
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Import JSON-LD Modal -->
+        <div id="jsonld-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h3>Incolla JSON-LD della Ricetta</h3>
+                <p class="help-text">
+                    Vai su Giallo Zafferano, apri la ricetta, visualizza il sorgente della pagina 
+                    e copia il contenuto dello script JSON-LD (cerca "application/ld+json")
+                </p>
+                <textarea 
+                    id="jsonld-input" 
+                    placeholder='{"@context": "https://schema.org", "@type": "Recipe", ...}'
+                    rows="10"
+                ></textarea>
+                <button onclick="importJsonLd()" class="btn btn-primary">Importa</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
