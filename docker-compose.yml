@@ -4,7 +4,7 @@ services:
     container_name: lazy-cook
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8765:3000"
     volumes:
       - /mnt/data/lazy-cook:/app/data
     environment:
