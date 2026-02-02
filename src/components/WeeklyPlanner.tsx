@@ -284,6 +284,15 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                         <i className={isMealOut(day.id, 'breakfast') ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
                       </button>
                     )}
+                    {isMealOut(day.id, 'breakfast') && (
+                      <button 
+                        className="meal-out-btn active"
+                        onClick={() => toggleMealOut(day.id, 'breakfast')}
+                        title="Torna a cucinare"
+                      >
+                        <i className="bi bi-house-fill"></i>
+                      </button>
+                    )}
                   </div>
                 </div>
                 
@@ -429,6 +438,15 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                         <i className={isMealOut(day.id, 'lunch') ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
                       </button>
                     )}
+                    {isMealOut(day.id, 'lunch') && (
+                      <button 
+                        className="meal-out-btn active"
+                        onClick={() => toggleMealOut(day.id, 'lunch')}
+                        title="Torna a cucinare"
+                      >
+                        <i className="bi bi-house-fill"></i>
+                      </button>
+                    )}
                   </div>
                 </div>
                 
@@ -569,6 +587,15 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                         title={isMealOut(day.id, 'dinner') ? 'Torna a cucinare' : 'Mangiamo fuori'}
                       >
                         <i className={isMealOut(day.id, 'dinner') ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
+                      </button>
+                    )}
+                    {isMealOut(day.id, 'dinner') && (
+                      <button 
+                        className="meal-out-btn active"
+                        onClick={() => toggleMealOut(day.id, 'dinner')}
+                        title="Torna a cucinare"
+                      >
+                        <i className="bi bi-house-fill"></i>
                       </button>
                     )}
                   </div>
