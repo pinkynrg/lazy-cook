@@ -123,68 +123,59 @@ export default function SavedPlans({ onRestore, currentPlanName, onPlanNameChang
   };
 
   return (
-    <div className="saved-plans-section">
-      <div className="saved-plans-header">
-        <div className="saved-plans-title-wrapper">
-          <h2>💾 Piani Salvati ({savedPlans.length})</h2>
-          <button 
-            className="pool-toggle-btn" 
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? '▼' : '▶'}
-          </button>
-        </div>
-        <div className="plan-name-input-wrapper">
-          <input
-            type="text"
-            value={currentPlanName}
-            onChange={(e) => onPlanNameChange(e.target.value)}
-            placeholder="Nome del piano corrente"
-            className="plan-name-input"
-          />
-          <button
-            className="btn btn-primary btn-small"
-            onClick={handleSavePlan}
-            disabled={saving}
-            title="Salva piano corrente"
-          >
-            {saving ? '⏳' : '💾'} Salva Piano
-          </button>
-        </div>
+    <div className="saved-plans-compact">
+      <div className="plan-save-section">
+        <input
+          type="text"
+          value={currentPlanName}
+          onChange={(e) => onPlanNameChange(e.target.value)}
+          placeholder="Nome del piano corrente"
+          className="plan-name-input-compact"
+        />
+        <button
+          className="btn btn-primary btn-compact"
+          onClick={handleSavePlan}
+          disabled={saving}
+          title="Salva piano corrente"
+        >
+          {saving ? <i className="bi bi-hourglass-split"></i> : <i className="bi bi-save-fill"></i>} Salva
+        </button>
       </div>
 
-      {expanded && (
-        <div className="saved-plans-content">
-          {savedPlans.length === 0 ? (
-            <p className="empty-pool">Nessun piano salvato</p>
-          ) : (
-            <div className="saved-plans-list">
-              {savedPlans.map(plan => (
-                <div key={plan.id} className="saved-plan-card">
-                  <div className="saved-plan-info">
-                    <h3>{plan.name}</h3>
-                  </div>
-                  <div className="saved-plan-actions">
-                    <button
-                      className="btn btn-secondary btn-small"
-                      onClick={() => handleRestorePlan(plan.id)}
-                      title="Ripristina questo piano"
-                    >
-                      ↻ Ripristina
-                    </button>
-                    <button
-                      className="btn btn-text btn-danger"
-                      onClick={() => handleDeletePlan(plan.id)}
-                      title="Elimina piano"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                </div>
-              ))}
+      {savedPlans.length > 0 && (
+        <div className="saved-plans-list-compact">
+          {savedPlans.map(plan => (
+            <div key={plan.id} className="saved-plan-item-compact">
+              <div className="saved-plan-info">
+                <span className="saved-plan-name">{plan.name}</span>
+                <span className="saved-plan-date">
+                  {new Date(plan.createdAt).toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+              <div className="saved-plan-actions">
+                <button
+                  className="btn-icon btn-restore"
+                  onClick={() => handleRestorePlan(plan.id)}
+                  title="Ripristina piano"
+                >
+                  <i className="bi bi-arrow-clockwise"></i>
+                </button>
+                <button
+                  className="btn-icon btn-delete"
+                  onClick={() => handleDeletePlan(plan.id)}
+                  title="Elimina piano"
+                >
+                  <i className="bi bi-trash-fill"></i>
+                </button>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       )}
     </div>

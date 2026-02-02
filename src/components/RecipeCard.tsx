@@ -96,7 +96,7 @@ export default function RecipeCard({
           onClick={() => onView(recipe)}
           title="Visualizza ricetta"
         >
-          👁️
+          <i className="bi bi-eye-fill"></i>
         </button>
         <button
           className="recipe-btn-remove"

@@ -94,7 +94,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings }: Recip
                     }}
                     title={recipe.servings ? 'Modifica porzioni' : 'Aggiungi porzioni'}
                   >
-                    {recipe.servings ? '✏️' : '+ Aggiungi'}
+                    {recipe.servings ? <i className="bi bi-pencil"></i> : '+ Aggiungi'}
                   </button>
                 )}
               </p>

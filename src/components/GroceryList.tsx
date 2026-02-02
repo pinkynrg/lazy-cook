@@ -58,7 +58,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
   return (
     <section className="grocery-section">
       <div className="section-header">
-        <h2>🛒 Lista della Spesa</h2>
+        <h2><i className="bi bi-cart"></i> Lista della Spesa</h2>
         <div className="section-header-actions">
           {!isNormalized && (
             <button
@@ -66,7 +66,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
               className="btn btn-secondary"
               disabled={normalizing || !hasRecipes}
             >
-              {normalizing ? '⏳ Calcolo in corso...' : '🛒 Calcola lista spesa'}
+              {normalizing ? <><i className="bi bi-hourglass-split"></i> Calcolo in corso...</> : <><i className="bi bi-cart"></i> Calcola lista spesa</>}
             </button>
           )}
           {isNormalized && groceryList.length > 0 && (
@@ -139,7 +139,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
               className="btn btn-text btn-danger"
               title="Svuota lista spesa"
             >
-              🗑️ Svuota lista
+              <i className="bi bi-trash"></i> Svuota lista
             </button>
           </div>
         </>

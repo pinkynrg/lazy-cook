@@ -24,13 +24,17 @@ export interface RecipeDayAssignment {
   id: number;
   recipeId: number;
   dayOfWeek: number; // 0-6 for Mon-Sun
-  mealType: 'lunch' | 'dinner';
+  mealType: 'breakfast' | 'lunch' | 'dinner';
   plannedServings: number; // Number of servings for this specific meal
+  eatingOut?: number; // 0 or 1, whether this meal is eaten outside
   createdAt: string;
 }
 
 export interface Settings {
   familySize: number;
+  enableBreakfast: boolean;
+  enableLunch: boolean;
+  enableDinner: boolean;
 }
 
 export interface Ingredient {

@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!['lunch', 'dinner'].includes(mealType)) {
+    if (!['breakfast', 'lunch', 'dinner'].includes(mealType)) {
       return NextResponse.json(
-        { error: 'mealType deve essere "lunch" o "dinner"' },
+        { error: 'mealType deve essere "breakfast", "lunch" o "dinner"' },
         { status: 400 }
       );
     }

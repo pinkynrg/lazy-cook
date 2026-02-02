@@ -37,6 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get eating out meals
+    const eatingOutMeals = db.prepare('SELECT * FROM eating_out_meals').all() as any[];
+
     // Get unique recipe IDs from assignments
     const recipeIds = [...new Set(currentAssignments.map(a => a.recipeId))];
 
@@ -47,24 +50,19 @@ export async function POST(request: NextRequest) {
 
     const planId = result.lastInsertRowid;
 
-    // Save complete recipe data (snapshot)
+    // Save complete recipe data (snapshot) - store jsonldSource and userOverrides
     const insertRecipe = db.prepare(
-      'INSERT INTO saved_plan_recipes (planId, recipeId, recipeName, recipeImage, recipePrepTime, recipeServings, recipeUrl, recipeIngredients) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO saved_plan_recipes (planId, originalRecipeId, recipeJsonld, recipeOverrides) VALUES (?, ?, ?, ?)'
     );
 
     for (const recipeId of recipeIds) {
       const recipe = db.prepare('SELECT * FROM recipes WHERE id = ?').get(recipeId) as any;
       if (recipe) {
-        const ingredients = db.prepare('SELECT * FROM ingredients WHERE recipeId = ?').all(recipeId);
         insertRecipe.run(
           planId,
-          recipe.id,
-          recipe.name,
-          recipe.image,
-          recipe.prepTime,
-          recipe.servings,
-          recipe.url,
-          JSON.stringify(ingredients)
+          recipeId,
+          recipe.jsonldSource,
+          recipe.userOverrides || null
         );
       }
     }
@@ -81,6 +79,19 @@ export async function POST(request: NextRequest) {
         assignment.dayOfWeek,
         assignment.mealType,
         assignment.plannedServings
+      );
+    }
+
+    // Save eating out meals
+    const insertEatingOut = db.prepare(
+      'INSERT INTO saved_plan_eating_out (planId, dayOfWeek, mealType) VALUES (?, ?, ?)'
+    );
+
+    for (const meal of eatingOutMeals) {
+      insertEatingOut.run(
+        planId,
+        meal.dayOfWeek,
+        meal.mealType
       );
     }
 

@@ -108,6 +108,10 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
         }
 
         const { recipe } = await response.json();
+        // Ensure URL is stored in the JSON-LD for duplicate detection
+        if (!recipe.url && !recipe['@id']) {
+          recipe.url = url;
+        }
         addRecipeFromJsonLd(recipe);
       } catch (err: any) {
         setError(err.message || 'Errore durante l\'estrazione della ricetta');

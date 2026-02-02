@@ -103,10 +103,14 @@ export function createSyntheticJsonLd(
   image?: string,
   instructions?: string
 ): JsonLdRecipe {
+  // Create a synthetic URL for manual recipes to enable duplicate detection
+  const syntheticUrl = `manual://recipe/${encodeURIComponent(name.toLowerCase())}`;
+  
   return {
     '@context': 'https://schema.org',
     '@type': 'Recipe',
     name,
+    url: syntheticUrl, // Add URL for duplicate detection
     recipeIngredient: ingredients,
     ...(servings && { recipeYield: servings }),
     ...(prepTime && { prepTime }),

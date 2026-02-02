@@ -7,7 +7,7 @@ import GroceryList from '@/components/GroceryList';
 import RecipeModal from '@/components/RecipeModal';
 import WeeklyPlanner from '@/components/WeeklyPlanner';
 import SavedPlans from '@/components/SavedPlans';
-import type { Recipe, GroceryItem } from '@/types/recipe';
+import type { Recipe, GroceryItem, Settings } from '@/types/recipe';
 import { jsonldToRecipe } from '@/lib/recipeParser';
 
 export default function Home() {
@@ -16,6 +16,9 @@ export default function Home() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isNormalized, setIsNormalized] = useState(false);
   const [familySize, setFamilySize] = useState(2);
+  const [enableBreakfast, setEnableBreakfast] = useState(false);
+  const [enableLunch, setEnableLunch] = useState(true);
+  const [enableDinner, setEnableDinner] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [currentPlanName, setCurrentPlanName] = useState('Piano Settimanale');
   const [libraryExpanded, setLibraryExpanded] = useState(false);
@@ -111,27 +114,33 @@ export default function Home() {
     try {
       const response = await fetch('/api/settings');
       if (response.ok) {
-        const { familySize: size } = await response.json();
+        const { familySize: size, enableBreakfast, enableLunch, enableDinner } = await response.json();
         setFamilySize(size);
+        setEnableBreakfast(enableBreakfast);
+        setEnableLunch(enableLunch);
+        setEnableDinner(enableDinner);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
   };
 
-  const updateFamilySize = async (size: number) => {
+  const updateSettings = async (updates: Partial<Settings>) => {
     try {
       const response = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ familySize: size }),
+        body: JSON.stringify(updates),
       });
 
       if (response.ok) {
-        setFamilySize(size);
+        if (updates.familySize !== undefined) setFamilySize(updates.familySize);
+        if (updates.enableBreakfast !== undefined) setEnableBreakfast(updates.enableBreakfast);
+        if (updates.enableLunch !== undefined) setEnableLunch(updates.enableLunch);
+        if (updates.enableDinner !== undefined) setEnableDinner(updates.enableDinner);
       }
     } catch (error) {
-      console.error('Error updating family size:', error);
+      console.error('Error updating settings:', error);
     }
   };
 
@@ -412,7 +421,7 @@ export default function Home() {
     }
   };
 
-  const addRecipeAssignment = async (recipeId: number, dayOfWeek: number, mealType: 'lunch' | 'dinner') => {
+  const addRecipeAssignment = async (recipeId: number, dayOfWeek: number, mealType: 'breakfast' | 'lunch' | 'dinner') => {
     try {
       const response = await fetch('/api/recipe-assignments', {
         method: 'POST',
@@ -460,7 +469,7 @@ export default function Home() {
     }
   };
 
-  const moveAssignment = async (assignmentId: number, dayOfWeek: number, mealType: 'lunch' | 'dinner') => {
+  const moveAssignment = async (assignmentId: number, dayOfWeek: number, mealType: 'breakfast' | 'lunch' | 'dinner') => {
     try {
       const response = await fetch('/api/recipe-assignments/update-day', {
         method: 'PATCH',
@@ -499,23 +508,75 @@ export default function Home() {
             <div className="settings-overlay" onClick={() => setShowSettings(false)} />
             <div className="settings-panel">
               <div className="settings-header">
-                <h3>⚙️ Impostazioni</h3>
+                <h3><i className="bi bi-gear-fill"></i> Impostazioni</h3>
                 <button className="settings-close-btn" onClick={() => setShowSettings(false)} title="Chiudi">
-                  ✕
+                  <i className="bi bi-x-lg"></i>
                 </button>
               </div>
-              <div className="setting-item">
-                <label htmlFor="familySize">👨‍👩‍👧‍👦 Numero persone in famiglia:</label>
-                <input
-                  id="familySize"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={familySize}
-                  onChange={(e) => updateFamilySize(parseInt(e.target.value) || 1)}
-                  className="family-size-input"
-                />
-                <span className="setting-hint">Porzioni predefinite per i pasti</span>
+              
+              <div className="settings-content">
+                <div className="setting-item">
+                  <div className="setting-label">
+                    <i className="bi bi-people-fill"></i>
+                    <label htmlFor="familySize">Numero persone in famiglia</label>
+                  </div>
+                  <input
+                    id="familySize"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={familySize}
+                    onChange={(e) => updateSettings({ familySize: parseInt(e.target.value) || 1 })}
+                    className="family-size-input"
+                  />
+                  <span className="setting-hint">Porzioni predefinite per i pasti</span>
+                </div>
+
+                <div className="setting-item">
+                  <div className="setting-label">
+                    <i className="bi bi-calendar-check-fill"></i>
+                    <label>Pasti da pianificare</label>
+                  </div>
+                  <div className="meal-toggles">
+                    <label className="meal-toggle-item">
+                      <input
+                        type="checkbox"
+                        checked={enableBreakfast}
+                        onChange={(e) => updateSettings({ enableBreakfast: e.target.checked })}
+                      />
+                      <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
+                    </label>
+                    <label className="meal-toggle-item">
+                      <input
+                        type="checkbox"
+                        checked={enableLunch}
+                        onChange={(e) => updateSettings({ enableLunch: e.target.checked })}
+                      />
+                      <span><i className="bi bi-sun-fill"></i> Pranzo</span>
+                    </label>
+                    <label className="meal-toggle-item">
+                      <input
+                        type="checkbox"
+                        checked={enableDinner}
+                        onChange={(e) => updateSettings({ enableDinner: e.target.checked })}
+                      />
+                      <span><i className="bi bi-moon-fill"></i> Cena</span>
+                    </label>
+                  </div>
+                  <span className="setting-hint">Scegli quali pasti mostrare nel piano settimanale</span>
+                </div>
+
+                <div className="setting-item">
+                  <div className="setting-label">
+                    <i className="bi bi-clock-history"></i>
+                    <label>Piani salvati</label>
+                  </div>
+                  <SavedPlans 
+                    onRestore={loadRecipesFromDb} 
+                    currentPlanName={currentPlanName}
+                    onPlanNameChange={setCurrentPlanName}
+                  />
+                </div>
               </div>
             </div>
           </>
@@ -561,12 +622,6 @@ export default function Home() {
           )}
         </section>
 
-        <SavedPlans 
-          onRestore={loadRecipesFromDb} 
-          currentPlanName={currentPlanName}
-          onPlanNameChange={setCurrentPlanName}
-        />
-
         <WeeklyPlanner 
           recipes={recipes} 
           onUpdateDay={updateRecipeDay}
@@ -578,6 +633,9 @@ export default function Home() {
           onUpdateAssignmentServings={updateAssignmentServings}
           onMoveAssignment={moveAssignment}
           onAddRecipe={addRecipe}
+          enableBreakfast={enableBreakfast}
+          enableLunch={enableLunch}
+          enableDinner={enableDinner}
         />
 
         <div className="main-content">

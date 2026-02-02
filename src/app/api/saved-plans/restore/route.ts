@@ -15,12 +15,17 @@ export async function POST(request: NextRequest) {
 
     // Get saved plan recipes
     const savedRecipes = db.prepare(
-      'SELECT * FROM saved_plan_recipes WHERE planId = ?'
+      'SELECT * FROM saved_plan_recipes WHERE planId = ? ORDER BY id'
     ).all(planId) as any[];
 
-    // Get saved plan assignments
+    // Get saved plan assignments  
     const savedAssignments = db.prepare(
-      'SELECT * FROM saved_plan_assignments WHERE planId = ?'
+      'SELECT * FROM saved_plan_assignments WHERE planId = ? ORDER BY id'
+    ).all(planId) as any[];
+
+    // Get saved eating out meals
+    const savedEatingOut = db.prepare(
+      'SELECT * FROM saved_plan_eating_out WHERE planId = ? ORDER BY id'
     ).all(planId) as any[];
 
     if (savedAssignments.length === 0) {
@@ -30,67 +35,92 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Map old recipe IDs to new recipe IDs (in case we need to recreate recipes)
+    // Build map: original recipeId -> new recipeId
     const recipeIdMap = new Map<number, number>();
+    const processedUrls = new Map<string, number>(); // Track URLs we've already processed in this restore
     let restoredRecipes = 0;
 
-    // Restore recipes to library if they don't exist
-    for (const savedRecipe of savedRecipes) {
-      // First check if the recipe exists by its original ID
-      let existingRecipe = db.prepare('SELECT id FROM recipes WHERE id = ?').get(savedRecipe.recipeId) as any;
+    console.log(`[RESTORE] Starting restore for plan ${planId}`);
+    console.log(`[RESTORE] Found ${savedRecipes.length} saved recipes to process`);
+
+    // Get all existing recipes once
+    const allExistingRecipes = db.prepare('SELECT id, jsonldSource FROM recipes').all() as any[];
+    console.log(`[RESTORE] Found ${allExistingRecipes.length} existing recipes in database`);
+
+    // Restore recipes and build mapping
+    for (let i = 0; i < savedRecipes.length; i++) {
+      const savedRecipe = savedRecipes[i];
+      // For old plans, originalRecipeId might be null, so use index-based mapping
+      const oldRecipeId = savedRecipe.originalRecipeId || (i + 1);
       
-      // If not found by ID, check if a recipe with the same name and URL exists (could be from another restored plan)
-      if (!existingRecipe && savedRecipe.recipeUrl) {
-        existingRecipe = db.prepare('SELECT id FROM recipes WHERE url = ? AND url IS NOT NULL').get(savedRecipe.recipeUrl) as any;
+      console.log(`\n[RESTORE] Processing recipe ${i + 1}/${savedRecipes.length}`);
+      console.log(`[RESTORE]   Old recipe ID: ${oldRecipeId}`);
+      console.log(`[RESTORE]   Saved recipe originalRecipeId: ${savedRecipe.originalRecipeId}`);
+      
+      // Parse JSON-LD to get URL for duplicate checking
+      const jsonldData = JSON.parse(savedRecipe.recipeJsonld);
+      const recipeUrl = jsonldData.url || jsonldData['@id'];
+      const recipeName = jsonldData.name || 'Unknown';
+      
+      console.log(`[RESTORE]   Recipe name: ${recipeName}`);
+      console.log(`[RESTORE]   Recipe URL: ${recipeUrl || 'NO URL'}`);
+      
+      // Check if we've already processed this URL in this restore operation
+      if (recipeUrl && processedUrls.has(recipeUrl)) {
+        const existingId = processedUrls.get(recipeUrl)!;
+        console.log(`[RESTORE]   ✓ Already processed this URL in this restore (mapped to ID ${existingId})`);
+        recipeIdMap.set(oldRecipeId, existingId);
+        continue;
       }
       
-      // If still not found, check by exact name match
-      if (!existingRecipe) {
-        existingRecipe = db.prepare('SELECT id FROM recipes WHERE name = ?').get(savedRecipe.recipeName) as any;
+      // Check if recipe already exists in database by URL
+      let existingRecipe = null;
+      if (recipeUrl) {
+        existingRecipe = allExistingRecipes.find(r => {
+          try {
+            const rData = JSON.parse(r.jsonldSource);
+            const rUrl = rData.url || rData['@id'];
+            return rUrl === recipeUrl;
+          } catch {
+            return false;
+          }
+        });
       }
       
       if (existingRecipe) {
-        // Recipe already exists, use its ID
-        recipeIdMap.set(savedRecipe.recipeId, existingRecipe.id);
-      } else {
-        // Recipe doesn't exist, recreate it
-        const now = new Date().toISOString();
-        const recipeResult = db.prepare(
-          'INSERT INTO recipes (name, image, prepTime, servings, url, dateAdded) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(
-          savedRecipe.recipeName,
-          savedRecipe.recipeImage,
-          savedRecipe.recipePrepTime,
-          savedRecipe.recipeServings,
-          savedRecipe.recipeUrl,
-          now
-        );
-
-        const newRecipeId = recipeResult.lastInsertRowid as number;
-        recipeIdMap.set(savedRecipe.recipeId, newRecipeId);
-
-        // Restore ingredients
-        const ingredients = JSON.parse(savedRecipe.recipeIngredients);
-        const insertIngredient = db.prepare(
-          'INSERT INTO ingredients (recipeId, original, quantity, name, normalized) VALUES (?, ?, ?, ?, ?)'
-        );
-
-        for (const ingredient of ingredients) {
-          insertIngredient.run(
-            newRecipeId,
-            ingredient.original,
-            ingredient.quantity,
-            ingredient.name,
-            ingredient.normalized
-          );
+        // Recipe exists, map old ID to existing ID
+        console.log(`[RESTORE]   ✓ Found existing recipe in DB with ID ${existingRecipe.id}`);
+        recipeIdMap.set(oldRecipeId, existingRecipe.id);
+        if (recipeUrl) {
+          processedUrls.set(recipeUrl, existingRecipe.id);
         }
-
+      } else {
+        // Create new recipe
+        console.log(`[RESTORE]   → Creating NEW recipe in database`);
+        const now = new Date().toISOString();
+        const result = db.prepare(
+          'INSERT INTO recipes (jsonldSource, userOverrides, dateAdded) VALUES (?, ?, ?)'
+        ).run(savedRecipe.recipeJsonld, savedRecipe.recipeOverrides || null, now);
+        
+        const newRecipeId = result.lastInsertRowid as number;
+        console.log(`[RESTORE]   ✓ Created new recipe with ID ${newRecipeId}`);
+        recipeIdMap.set(oldRecipeId, newRecipeId);
+        if (recipeUrl) {
+          processedUrls.set(recipeUrl, newRecipeId);
+        }
         restoredRecipes++;
       }
     }
 
+    console.log(`\n[RESTORE] Recipe ID mapping:`, Object.fromEntries(recipeIdMap));
+    console.log(`[RESTORE] Processed URLs:`, Object.fromEntries(processedUrls));
+    console.log(`[RESTORE] Total new recipes created: ${restoredRecipes}`);
+
     // Clear current assignments
     db.prepare('DELETE FROM recipe_day_assignments').run();
+
+    // Clear eating out meals
+    db.prepare('DELETE FROM eating_out_meals').run();
 
     // Restore assignments with mapped recipe IDs
     const insertAssignment = db.prepare(
@@ -109,6 +139,18 @@ export async function POST(request: NextRequest) {
         );
         restoredAssignments++;
       }
+    }
+
+    // Restore eating out meals
+    const insertEatingOut = db.prepare(
+      'INSERT INTO eating_out_meals (dayOfWeek, mealType) VALUES (?, ?)'
+    );
+
+    for (const meal of savedEatingOut) {
+      insertEatingOut.run(
+        meal.dayOfWeek,
+        meal.mealType
+      );
     }
 
     let message = 'Piano ripristinato con successo!';
