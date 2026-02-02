@@ -14,6 +14,7 @@ interface WeeklyPlannerProps {
   onUpdateAssignmentServings: (assignmentId: number, plannedServings: number) => void;
   onMoveAssignment: (assignmentId: number, dayOfWeek: number, mealType: 'breakfast' | 'lunch' | 'dinner') => void;
   onAddRecipe: (recipe: Recipe) => void;
+  onClearWeek: () => void;
   enableBreakfast: boolean;
   enableLunch: boolean;
   enableDinner: boolean;
@@ -31,7 +32,7 @@ const DAYS = [
 
 type MealOutKey = `${number}-${'breakfast' | 'lunch' | 'dinner'}`;
 
-export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRemoveRecipe, onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, enableBreakfast, enableLunch, enableDinner }: WeeklyPlannerProps) {
+export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRemoveRecipe, onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner }: WeeklyPlannerProps) {
   const [editingServingsId, setEditingServingsId] = useState<number | null>(null);
   const [servingsInput, setServingsInput] = useState('');
   const [selectingRecipeFor, setSelectingRecipeFor] = useState<{ day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
@@ -216,9 +217,179 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
 
   const unassignedRecipes = recipes;
 
+  // Helper function to render a meal cell
+  const renderMealCell = (day: typeof DAYS[0], mealType: 'breakfast' | 'lunch' | 'dinner') => {
+    const mealRecipes = getRecipesForDay(day.id, mealType);
+    const mealTitles = { breakfast: 'Colazione', lunch: 'Pranzo', dinner: 'Cena' };
+    
+    return (
+      <div key={`${day.id}-${mealType}`} className={`meal-cell ${isMealOut(day.id, mealType) ? 'meal-out' : ''}`}>
+        <div className="meal-header">
+          <span className="meal-title">{mealTitles[mealType]}</span>
+          <div className="meal-header-actions">
+            {!isMealOut(day.id, mealType) && (
+              <button 
+                className="meal-add-btn-header"
+                onClick={() => setSelectingRecipeFor(
+                  selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType 
+                    ? null 
+                    : { day: day.id, meal: mealType }
+                )}
+                title="Aggiungi ricetta"
+              >
+                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType ? '✕' : '+'}
+              </button>
+            )}
+            {!isMealOut(day.id, mealType) && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) && (
+              <button 
+                className={`meal-out-btn ${isMealOut(day.id, mealType) ? 'active' : ''}`}
+                onClick={() => toggleMealOut(day.id, mealType)}
+                title={isMealOut(day.id, mealType) ? 'Torna a cucinare' : 'Mangiamo fuori'}
+              >
+                <i className={isMealOut(day.id, mealType) ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
+              </button>
+            )}
+            {isMealOut(day.id, mealType) && (
+              <button 
+                className="meal-out-btn active"
+                onClick={() => toggleMealOut(day.id, mealType)}
+                title="Torna a cucinare"
+              >
+                <i className="bi bi-house-fill"></i>
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {isMealOut(day.id, mealType) ? (
+          <div className="meal-out-message">
+            <i className="bi bi-shop"></i>
+            <span>Mangiamo fuori</span>
+          </div>
+        ) : (
+          <>
+            {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType && (
+              <div className="recipe-selector">
+                {recipes.map(recipe => (
+                  <button
+                    key={recipe.id}
+                    className="recipe-selector-item"
+                    onClick={() => {
+                      onAddAssignment(recipe.id, day.id, mealType);
+                      setSelectingRecipeFor(null);
+                    }}
+                  >
+                    {recipe.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {!(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) && (
+              <div 
+                className="meal-recipes"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, day.id, mealType)}
+              >
+                {mealRecipes.length === 0 && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) ? (
+                  <div 
+                    className="empty-meal"
+                    onClick={() => setSelectingRecipeFor({ day: day.id, meal: mealType })}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    + Aggiungi o trascina qui
+                  </div>
+                ) : mealRecipes.length === 0 ? null : (
+                  <>
+                    {mealRecipes.map(({ assignment, recipe }) => (
+                      <div
+                        key={assignment.id}
+                        className="recipe-card-mini"
+                        draggable
+                        onDragStart={(e) => handleAssignmentDragStart(e, assignment.id)}
+                      >
+                        {recipe.image && (
+                          <div className="recipe-card-mini-image">
+                            <img src={recipe.image} alt={recipe.name} />
+                          </div>
+                        )}
+                        <div className="recipe-card-content">
+                          {editingAssignmentId === assignment.id ? (
+                            <div className="servings-edit" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="number"
+                                min="1"
+                                value={assignmentServingsInput}
+                                onChange={(e) => setAssignmentServingsInput(e.target.value)}
+                                placeholder="es. 4"
+                                className="servings-input"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveAssignmentServings(assignment.id);
+                                  if (e.key === 'Escape') cancelEditingAssignmentServings();
+                                }}
+                              />
+                              <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva">✓</button>
+                              <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla">✕</button>
+                            </div>
+                          ) : (
+                            <span className="recipe-card-title">{recipe.name}</span>
+                          )}
+                        </div>
+                        <div className="recipe-card-actions">
+                          {editingAssignmentId !== assignment.id && (
+                            <button 
+                              className="recipe-btn-servings"
+                              onClick={(e) => startEditingAssignmentServings(assignment, e)}
+                              title="Porzioni pianificate per questo pasto - clicca per modificare"
+                            >
+                              <i className="bi bi-person-fill"></i> {assignment.plannedServings}
+                            </button>
+                          )}
+                          <button 
+                            className="recipe-btn-view"
+                            onClick={() => onViewRecipe(recipe)}
+                            title="Visualizza ricetta"
+                          >
+                            <i className="bi bi-eye-fill"></i>
+                          </button>
+                          <button 
+                            className="recipe-btn-remove"
+                            onClick={() => onRemoveAssignment(assignment.id)}
+                            title="Rimuovi"
+                          >
+                            <i className="bi bi-trash-fill"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="weekly-planner">
-      <h2><i className="bi bi-calendar-week"></i> Piano Settimanale</h2>
+      <div className="planner-header">
+        <h2><i className="bi bi-calendar-week"></i> Piano Settimanale</h2>
+        <button 
+          className="btn btn-outline clear-week-btn"
+          onClick={() => {
+            if (window.confirm('Vuoi davvero svuotare tutta la settimana? Questa azione non può essere annullata.')) {
+              onClearWeek();
+            }
+          }}
+          title="Svuota settimana"
+        >
+          <i className="bi bi-trash3"></i>
+          <span className="clear-week-text">Svuota settimana</span>
+        </button>
+      </div>
 
       {/* Day Navigator for Mobile */}
       <div className="day-navigator">
@@ -234,486 +405,71 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
         ))}
       </div>
 
-      {/* Week grid */}
-      <div className="week-grid">
-        {DAYS.map(day => {
-          const lunchRecipes = getRecipesForDay(day.id, 'lunch');
-          const dinnerRecipes = getRecipesForDay(day.id, 'dinner');
-          
-          return (
-            <div
-              key={day.id}
-              id={`day-${day.id}`}
-              className={`day-column ${expandedDay !== day.id ? 'collapsed' : ''}`}
-            >
-              <div 
-                className="day-header"
-                onClick={() => toggleDay(day.id)}
-              >
-                <div className="day-name">{day.name}</div>
-                <button className="day-toggle-btn" type="button">
-                  {expandedDay === day.id ? '▼' : '▶'}
-                </button>
-              </div>
-              
-              {/* Breakfast Section */}
-              {enableBreakfast && (
-              <div className={`meal-section ${isMealOut(day.id, 'breakfast') ? 'meal-out' : ''}`}>
-                <div className="meal-header">
-                  <span className="meal-title">Colazione</span>
-                  <div className="meal-header-actions">
-                    {!isMealOut(day.id, 'breakfast') && (
-                      <button 
-                        className="meal-add-btn-header"
-                        onClick={() => setSelectingRecipeFor(
-                          selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'breakfast' 
-                            ? null 
-                            : { day: day.id, meal: 'breakfast' }
-                        )}
-                        title="Aggiungi ricetta"
-                      >
-                        {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'breakfast' ? '✕' : '+'}
-                      </button>
-                    )}
-                    {!isMealOut(day.id, 'breakfast') && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'breakfast') && (
-                      <button 
-                        className={`meal-out-btn ${isMealOut(day.id, 'breakfast') ? 'active' : ''}`}
-                        onClick={() => toggleMealOut(day.id, 'breakfast')}
-                        title={isMealOut(day.id, 'breakfast') ? 'Torna a cucinare' : 'Mangiamo fuori'}
-                      >
-                        <i className={isMealOut(day.id, 'breakfast') ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
-                      </button>
-                    )}
-                    {isMealOut(day.id, 'breakfast') && (
-                      <button 
-                        className="meal-out-btn active"
-                        onClick={() => toggleMealOut(day.id, 'breakfast')}
-                        title="Torna a cucinare"
-                      >
-                        <i className="bi bi-house-fill"></i>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                {isMealOut(day.id, 'breakfast') ? (
-                  <div className="meal-out-message">
-                    <i className="bi bi-shop"></i>
-                    <span>Mangiamo fuori</span>
-                  </div>
-                ) : (
-                  <>
-                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'breakfast' && (
-                  <div className="recipe-selector">
-                    {recipes.map(recipe => (
-                      <button
-                        key={recipe.id}
-                        className="recipe-selector-item"
-                        onClick={() => {
-                          onAddAssignment(recipe.id, day.id, 'breakfast');
-                          setSelectingRecipeFor(null);
-                        }}
-                      >
-                        {recipe.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                {!(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'breakfast') && (
-                <div 
-                  className="meal-recipes"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, day.id, 'breakfast')}
-                >
-                  {(() => {
-                    const breakfastRecipes = getRecipesForDay(day.id, 'breakfast');
-                    return breakfastRecipes.length === 0 && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'breakfast') ? (
-                      <div 
-                        className="empty-meal"
-                        onClick={() => setSelectingRecipeFor({ day: day.id, meal: 'breakfast' })}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        + Aggiungi o trascina qui
-                      </div>
-                    ) : breakfastRecipes.length === 0 ? null : (
-                      <>
-                      {breakfastRecipes.map(({ assignment, recipe }) => (
-                        <div
-                          key={assignment.id}
-                          className="recipe-card-mini"
-                          draggable
-                          onDragStart={(e) => handleAssignmentDragStart(e, assignment.id)}
-                        >
-                          {recipe.image && (
-                            <div className="recipe-card-mini-image">
-                              <img src={recipe.image} alt={recipe.name} />
-                            </div>
-                          )}
-                          <div className="recipe-card-content">
-                            {editingAssignmentId === assignment.id ? (
-                              <div className="servings-edit" onClick={(e) => e.stopPropagation()}>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={assignmentServingsInput}
-                                  onChange={(e) => setAssignmentServingsInput(e.target.value)}
-                                  placeholder="es. 4"
-                                  className="servings-input"
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') saveAssignmentServings(assignment.id);
-                                    if (e.key === 'Escape') cancelEditingAssignmentServings();
-                                  }}
-                                />
-                                <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva">✓</button>
-                                <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla">✕</button>
-                              </div>
-                            ) : (
-                              <span className="recipe-card-title">{recipe.name}</span>
-                            )}
-                          </div>
-                          <div className="recipe-card-actions">
-                            {editingAssignmentId !== assignment.id && (
-                              <button 
-                                className="recipe-btn-servings"
-                                onClick={(e) => startEditingAssignmentServings(assignment, e)}
-                                title="Porzioni pianificate per questo pasto - clicca per modificare"
-                              >
-                                <i className="bi bi-person-fill"></i> {assignment.plannedServings}
-                              </button>
-                            )}
-                            <button 
-                              className="recipe-btn-view"
-                              onClick={() => onViewRecipe(recipe)}
-                              title="Visualizza ricetta"
-                            >
-                              <i className="bi bi-eye-fill"></i>
-                            </button>
-                            <button 
-                              className="recipe-btn-remove"
-                              onClick={() => onRemoveAssignment(assignment.id)}
-                              title="Rimuovi"
-                            >
-                              <i className="bi bi-trash-fill"></i>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      </>
-                    );
-                  })()}
-                </div>
-                )}
-                </>
-                )}
-              </div>
-              )}
-
-              {/* Lunch Section */}
-              {enableLunch && (
-              <div className={`meal-section ${isMealOut(day.id, 'lunch') ? 'meal-out' : ''}`}>
-                <div className="meal-header">
-                  <span className="meal-title">Pranzo</span>
-                  <div className="meal-header-actions">
-                    {!isMealOut(day.id, 'lunch') && (
-                      <button 
-                        className="meal-add-btn-header"
-                        onClick={() => setSelectingRecipeFor(
-                          selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'lunch' 
-                            ? null 
-                            : { day: day.id, meal: 'lunch' }
-                        )}
-                        title="Aggiungi ricetta"
-                      >
-                        {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'lunch' ? '✕' : '+'}
-                      </button>
-                    )}
-                    {!isMealOut(day.id, 'lunch') && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'lunch') && (
-                      <button 
-                        className={`meal-out-btn ${isMealOut(day.id, 'lunch') ? 'active' : ''}`}
-                        onClick={() => toggleMealOut(day.id, 'lunch')}
-                        title={isMealOut(day.id, 'lunch') ? 'Torna a cucinare' : 'Mangiamo fuori'}
-                      >
-                        <i className={isMealOut(day.id, 'lunch') ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
-                      </button>
-                    )}
-                    {isMealOut(day.id, 'lunch') && (
-                      <button 
-                        className="meal-out-btn active"
-                        onClick={() => toggleMealOut(day.id, 'lunch')}
-                        title="Torna a cucinare"
-                      >
-                        <i className="bi bi-house-fill"></i>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                {isMealOut(day.id, 'lunch') ? (
-                  <div className="meal-out-message">
-                    <i className="bi bi-shop"></i>
-                    <span>Mangiamo fuori</span>
-                  </div>
-                ) : (
-                  <>
-                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'lunch' && (
-                  <div className="recipe-selector">
-                    {recipes.map(recipe => (
-                      <button
-                        key={recipe.id}
-                        className="recipe-selector-item"
-                        onClick={() => {
-                          onAddAssignment(recipe.id, day.id, 'lunch');
-                          setSelectingRecipeFor(null);
-                        }}
-                      >
-                        {recipe.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                {!(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'lunch') && (
-                <div 
-                  className="meal-recipes"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, day.id, 'lunch')}
-                >
-                  {lunchRecipes.length === 0 && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'lunch') ? (
-                      <div 
-                        className="empty-meal"
-                        onClick={() => setSelectingRecipeFor({ day: day.id, meal: 'lunch' })}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        + Aggiungi o trascina qui
-                      </div>
-                  ) : lunchRecipes.length === 0 ? null : (
-                    <>
-                    {lunchRecipes.map(({ assignment, recipe }) => (
-                      <div
-                        key={assignment.id}
-                        className="recipe-card-mini"
-                        draggable
-                        onDragStart={(e) => handleAssignmentDragStart(e, assignment.id)}
-                      >
-                        {recipe.image && (
-                          <div className="recipe-card-mini-image">
-                            <img src={recipe.image} alt={recipe.name} />
-                          </div>
-                        )}
-                        <div className="recipe-card-content">
-                          {editingAssignmentId === assignment.id ? (
-                            <div className="servings-edit" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="number"
-                                min="1"
-                                value={assignmentServingsInput}
-                                onChange={(e) => setAssignmentServingsInput(e.target.value)}
-                                placeholder="es. 4"
-                                className="servings-input"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') saveAssignmentServings(assignment.id);
-                                  if (e.key === 'Escape') cancelEditingAssignmentServings();
-                                }}
-                              />
-                              <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva">✓</button>
-                              <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla">✕</button>
-                            </div>
-                          ) : (
-                            <span className="recipe-card-title">{recipe.name}</span>
-                          )}
-                        </div>
-                        <div className="recipe-card-actions">
-                          {editingAssignmentId !== assignment.id && (
-                            <button 
-                              className="recipe-btn-servings"
-                              onClick={(e) => startEditingAssignmentServings(assignment, e)}
-                              title="Porzioni pianificate per questo pasto - clicca per modificare"
-                            >
-                              <i className="bi bi-person-fill"></i> {assignment.plannedServings}
-                            </button>
-                          )}
-                          <button 
-                            className="recipe-btn-view"
-                            onClick={() => onViewRecipe(recipe)}
-                            title="Visualizza ricetta"
-                          >
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
-                          <button 
-                            className="recipe-btn-remove"
-                            onClick={() => onRemoveAssignment(assignment.id)}
-                            title="Rimuovi"
-                          >
-                            <i className="bi bi-trash-fill"></i>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    </>
-                  )}
-                </div>
-                )}
-                </>
-                )}
-              </div>
-              )}
-
-              {/* Dinner Section */}
-              {enableDinner && (
-              <div className={`meal-section ${isMealOut(day.id, 'dinner') ? 'meal-out' : ''}`}>
-                <div className="meal-header">
-                  <span className="meal-title">Cena</span>
-                  <div className="meal-header-actions">
-                    {!isMealOut(day.id, 'dinner') && (
-                      <button 
-                        className="meal-add-btn-header"
-                        onClick={() => setSelectingRecipeFor(
-                          selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'dinner' 
-                            ? null 
-                            : { day: day.id, meal: 'dinner' }
-                        )}
-                        title="Aggiungi ricetta"
-                      >
-                        {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'dinner' ? '✕' : '+'}
-                      </button>
-                    )}
-                    {!isMealOut(day.id, 'dinner') && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'dinner') && (
-                      <button 
-                        className={`meal-out-btn ${isMealOut(day.id, 'dinner') ? 'active' : ''}`}
-                        onClick={() => toggleMealOut(day.id, 'dinner')}
-                        title={isMealOut(day.id, 'dinner') ? 'Torna a cucinare' : 'Mangiamo fuori'}
-                      >
-                        <i className={isMealOut(day.id, 'dinner') ? 'bi bi-house-fill' : 'bi bi-shop'}></i>
-                      </button>
-                    )}
-                    {isMealOut(day.id, 'dinner') && (
-                      <button 
-                        className="meal-out-btn active"
-                        onClick={() => toggleMealOut(day.id, 'dinner')}
-                        title="Torna a cucinare"
-                      >
-                        <i className="bi bi-house-fill"></i>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                {isMealOut(day.id, 'dinner') ? (
-                  <div className="meal-out-message">
-                    <i className="bi bi-shop"></i>
-                    <span>Mangiamo fuori</span>
-                  </div>
-                ) : (
-                  <>
-                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'dinner' && (
-                  <div className="recipe-selector">
-                    {recipes.map(recipe => (
-                      <button
-                        key={recipe.id}
-                        className="recipe-selector-item"
-                        onClick={() => {
-                          onAddAssignment(recipe.id, day.id, 'dinner');
-                          setSelectingRecipeFor(null);
-                        }}
-                      >
-                        {recipe.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                {!(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'dinner') && (
-                <div 
-                  className="meal-recipes"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, day.id, 'dinner')}
-                >
-                  {dinnerRecipes.length === 0 && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === 'dinner') ? (
-                      <div 
-                        className="empty-meal"
-                        onClick={() => setSelectingRecipeFor({ day: day.id, meal: 'dinner' })}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        + Aggiungi o trascina qui
-                      </div>
-                  ) : dinnerRecipes.length === 0 ? null : (
-                    <>
-                    {dinnerRecipes.map(({ assignment, recipe }) => (
-                      <div
-                        key={assignment.id}
-                        className="recipe-card-mini"
-                        draggable
-                        onDragStart={(e) => handleAssignmentDragStart(e, assignment.id)}
-                      >
-                        {recipe.image && (
-                          <div className="recipe-card-mini-image">
-                            <img src={recipe.image} alt={recipe.name} />
-                          </div>
-                        )}
-                        <div className="recipe-card-content">
-                          {editingAssignmentId === assignment.id ? (
-                            <div className="servings-edit" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="number"
-                                min="1"
-                                value={assignmentServingsInput}
-                                onChange={(e) => setAssignmentServingsInput(e.target.value)}
-                                placeholder="es. 4"
-                                className="servings-input"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') saveAssignmentServings(assignment.id);
-                                  if (e.key === 'Escape') cancelEditingAssignmentServings();
-                                }}
-                              />
-                              <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva">✓</button>
-                              <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla">✕</button>
-                            </div>
-                          ) : (
-                            <span className="recipe-card-title">{recipe.name}</span>
-                          )}
-                        </div>
-                        <div className="recipe-card-actions">
-                          {editingAssignmentId !== assignment.id && (
-                            <button 
-                              className="recipe-btn-servings"
-                              onClick={(e) => startEditingAssignmentServings(assignment, e)}
-                              title="Porzioni pianificate per questo pasto - clicca per modificare"
-                            >
-                              <i className="bi bi-person-fill"></i> {assignment.plannedServings}
-                            </button>
-                          )}
-                          <button 
-                            className="recipe-btn-view"
-                            onClick={() => onViewRecipe(recipe)}
-                            title="Visualizza ricetta"
-                          >
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
-                          <button 
-                            className="recipe-btn-remove"
-                            onClick={() => onRemoveAssignment(assignment.id)}
-                            title="Rimuovi"
-                          >
-                            <i className="bi bi-trash-fill"></i>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    </>
-                  )}
-                </div>
-                )}
-                </>
-                )}
-              </div>
-              )}
+      {/* Week grid - Row-based layout for desktop */}
+      <div className="week-grid-rows desktop-view">
+        {/* Day headers row */}
+        <div className="week-row week-row-headers">
+          {DAYS.map(day => (
+            <div key={day.id} className="day-header-cell">
+              <div className="day-name">{day.name}</div>
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* Breakfast row */}
+        {enableBreakfast && (
+          <div className="week-row">
+            {DAYS.map(day => renderMealCell(day, 'breakfast'))}
+          </div>
+        )}
+
+        {/* Lunch row */}
+        {enableLunch && (
+          <div className="week-row">
+            {DAYS.map(day => renderMealCell(day, 'lunch'))}
+          </div>
+        )}
+
+        {/* Dinner row */}
+        {enableDinner && (
+          <div className="week-row">
+            {DAYS.map(day => renderMealCell(day, 'dinner'))}
+          </div>
+        )}
+      </div>
+
+      {/* Mobile column view - collapsible days */}
+      <div className="week-mobile-view">
+        {DAYS.map(day => (
+          <div
+            key={day.id}
+            id={`day-${day.id}`}
+            className={`day-column-mobile ${expandedDay !== day.id ? 'collapsed' : ''}`}
+          >
+            <div 
+              className="day-header-mobile"
+              onClick={() => toggleDay(day.id)}
+            >
+              <div className="day-name">{day.name}</div>
+              <button className="day-toggle-btn" type="button">
+                {expandedDay === day.id ? '▼' : '▶'}
+              </button>
+            </div>
+            
+            {expandedDay === day.id && (
+              <>
+                {/* Breakfast Section */}
+                {enableBreakfast && renderMealCell(day, 'breakfast')}
+                
+                {/* Lunch Section */}
+                {enableLunch && renderMealCell(day, 'lunch')}
+                
+                {/* Dinner Section */}
+                {enableDinner && renderMealCell(day, 'dinner')}
+              </>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

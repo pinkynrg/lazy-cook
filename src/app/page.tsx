@@ -485,6 +485,20 @@ export default function Home() {
     }
   };
 
+  const clearWeek = async () => {
+    try {
+      const response = await fetch('/api/recipe-assignments/clear-all', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await loadRecipesFromDb();
+      }
+    } catch (error) {
+      console.error('Error clearing week:', error);
+    }
+  };
+
   return (
     <div className="container">
       <header>
@@ -633,6 +647,7 @@ export default function Home() {
           onUpdateAssignmentServings={updateAssignmentServings}
           onMoveAssignment={moveAssignment}
           onAddRecipe={addRecipe}
+          onClearWeek={clearWeek}
           enableBreakfast={enableBreakfast}
           enableLunch={enableLunch}
           enableDinner={enableDinner}
