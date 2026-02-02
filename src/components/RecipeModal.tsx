@@ -39,7 +39,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings }: Recip
         )}
 
         <div style={{ marginBottom: '20px' }}>
-          {recipe.prepTime && <p>⏱️ Tempo: {recipe.prepTime}</p>}
+          {recipe.prepTime && <p><i className="bi bi-clock"></i> Tempo: {recipe.prepTime}</p>}
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isEditingServings ? (
@@ -103,7 +103,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings }: Recip
 
           {recipe.url && (
             <p>
-              🔗{' '}
+              <i className="bi bi-link-45deg"></i>{' '}
               <a href={recipe.url} target="_blank" rel="noopener noreferrer">
                 Vedi ricetta originale
               </a>

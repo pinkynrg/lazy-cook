@@ -1793,6 +1793,11 @@ h2 {
   .meal-out-message span {
     font-size: 0.85rem;
   }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .meal-add-btn-header {
@@ -1976,6 +1981,7 @@ h2 {
   gap: 8px;
   padding: 10px;
   background: white;
+  flex: 1;
 }
 
 .recipe-card-actions {

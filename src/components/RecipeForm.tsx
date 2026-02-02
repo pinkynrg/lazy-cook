@@ -131,14 +131,14 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
           className={`mode-btn ${!manualMode ? 'active' : ''}`}
           onClick={() => setManualMode(false)}
         >
-          🔗 URL
+          <i className="bi bi-link-45deg"></i> URL
         </button>
         <button
           type="button"
           className={`mode-btn ${manualMode ? 'active' : ''}`}
           onClick={() => setManualMode(true)}
         >
-          ✍️ Manuale
+          <i className="bi bi-pencil-square"></i> Manuale
         </button>
       </div>
 

@@ -22,6 +22,7 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [currentPlanName, setCurrentPlanName] = useState('Piano Settimanale');
   const [libraryExpanded, setLibraryExpanded] = useState(false);
+  const [mealsOut, setMealsOut] = useState<Set<string>>(new Set());
 
   // Load recipes from database
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function Home() {
       buildGroceryListFromRecipes();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipes, isNormalized]);
+  }, [recipes, isNormalized, mealsOut]);
 
   // Helper function to parse and scale ingredient quantities
   const scaleIngredientQuantity = (quantityStr: string, ratio: number): string => {
@@ -165,6 +166,12 @@ export default function Home() {
 
       // Process each assignment separately (same recipe can appear multiple times)
       assignments.forEach(assignment => {
+        // Skip if this meal is marked as eating out
+        const mealKey = `${assignment.dayOfWeek}-${assignment.mealType}`;
+        if (mealsOut.has(mealKey)) {
+          return; // Skip this assignment
+        }
+        
         const plannedServings = assignment.plannedServings;
         
         // Calculate scaling ratio
@@ -612,7 +619,7 @@ export default function Home() {
           <RecipeForm onAddRecipe={addRecipe} />
           {libraryExpanded && (
             <>
-              <p className="library-hint">🖱️ Trascina le ricette nei giorni o usa il pulsante + per aggiungerle</p>
+              <p className="library-hint"><i className="bi bi-cursor"></i> Trascina le ricette nei giorni o usa il pulsante + per aggiungerle</p>
               <div className="recipe-pool">
             {recipes.length === 0 ? (
               <p className="empty-pool">Nessuna ricetta disponibile</p>
@@ -651,6 +658,7 @@ export default function Home() {
           enableBreakfast={enableBreakfast}
           enableLunch={enableLunch}
           enableDinner={enableDinner}
+          onMealsOutChange={setMealsOut}
         />
 
         <div className="main-content">

@@ -79,7 +79,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
                 className="btn btn-text btn-small"
                 title="Copia negli appunti"
               >
-                📋 Copia
+                <i className="bi bi-clipboard"></i> Copia
               </button>
             </>
           )}

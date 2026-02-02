@@ -18,6 +18,7 @@ interface WeeklyPlannerProps {
   enableBreakfast: boolean;
   enableLunch: boolean;
   enableDinner: boolean;
+  onMealsOutChange?: (mealsOut: Set<string>) => void;
 }
 
 const DAYS = [
@@ -32,7 +33,7 @@ const DAYS = [
 
 type MealOutKey = `${number}-${'breakfast' | 'lunch' | 'dinner'}`;
 
-export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRemoveRecipe, onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner }: WeeklyPlannerProps) {
+export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRemoveRecipe, onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner, onMealsOutChange }: WeeklyPlannerProps) {
   const [editingServingsId, setEditingServingsId] = useState<number | null>(null);
   const [servingsInput, setServingsInput] = useState('');
   const [selectingRecipeFor, setSelectingRecipeFor] = useState<{ day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
@@ -53,6 +54,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
             newSet.add(`${meal.dayOfWeek}-${meal.mealType}` as MealOutKey);
           });
           setMealsOut(newSet);
+          onMealsOutChange?.(newSet);
         }
       } catch (error) {
         console.error('Error loading eating out status:', error);
@@ -66,6 +68,30 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     const isCurrentlyOut = mealsOut.has(key);
     const newEatingOut = !isCurrentlyOut;
     
+    // Ask for confirmation when turning eating out ON (which will remove meals)
+    if (newEatingOut) {
+      const assignmentsToRemove = recipes
+        .flatMap(r => r.assignments || [])
+        .filter(a => a.dayOfWeek === day && a.mealType === meal);
+      
+      if (assignmentsToRemove.length > 0) {
+        const mealNames = {
+          breakfast: 'colazione',
+          lunch: 'pranzo',
+          dinner: 'cena'
+        };
+        
+        if (!confirm(`Sei sicuro di voler mangiare fuori per ${mealNames[meal]}? Le ricette pianificate verranno rimosse.`)) {
+          return;
+        }
+      }
+      
+      // Remove each assignment
+      for (const assignment of assignmentsToRemove) {
+        onRemoveAssignment(assignment.id);
+      }
+    }
+    
     // Optimistically update UI
     setMealsOut(prev => {
       const newSet = new Set(prev);
@@ -74,6 +100,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
       } else {
         newSet.add(key);
       }
+      onMealsOutChange?.(newSet);
       return newSet;
     });
 

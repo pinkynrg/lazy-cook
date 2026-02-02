@@ -84,7 +84,7 @@ export default function RecipeCard({
                 onClick={(e) => onStartEditServings?.(assignment, e)}
                 title="Porzioni pianificate per questo pasto - clicca per modificare"
               >
-                🍽️ {assignment.plannedServings}
+                <i className="bi bi-dish"></i> {assignment.plannedServings}
               </span>
             )}
           </>
@@ -103,7 +103,7 @@ export default function RecipeCard({
           onClick={() => onRemove(assignment?.id || recipe.id)}
           title="Rimuovi"
         >
-          🗑
+          <i className="bi bi-trash"></i>
         </button>
       </div>
     </div>
