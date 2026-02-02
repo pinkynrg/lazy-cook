@@ -1296,6 +1296,9 @@ h2 {
 }
 
 .week-row-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -1303,9 +1306,11 @@ h2 {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border: 2px solid #e1e8ed;
   border-radius: 12px 12px 0 0;
-  padding: 16px 18px;
+  padding: 16px 8px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .meal-cell {
@@ -1324,19 +1329,7 @@ h2 {
   box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
 }
 
-@media (max-width: 1200px) {
-  .week-row {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .week-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
+@media (max-width: 900px) {
   .desktop-view {
     display: none !important;
   }
@@ -1587,7 +1580,7 @@ h2 {
 
 .day-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.77rem;
   color: #2c3e50;
   text-transform: uppercase;
   letter-spacing: 0.5px;
