@@ -173,7 +173,7 @@ export default function Home() {
           : 1;
 
         // Scale each ingredient for this assignment
-        recipe.ingredients.forEach(ing => {
+        recipe.ingredients?.forEach(ing => {
           const scaledQuantity = scaleIngredientQuantity(ing.quantity, ratio);
           const key = (ing.normalized || ing.name).toLowerCase();
           

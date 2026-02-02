@@ -41,6 +41,7 @@ export interface Ingredient {
   original: string;
   quantity: string;
   name: string;
+  normalized?: string;
 }
 
 export interface GroceryItem {

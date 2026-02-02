@@ -113,7 +113,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings }: Recip
 
         <h4 style={{ marginBottom: '10px' }}>Ingredienti:</h4>
         <ul className="ingredient-list">
-          {recipe.ingredients.map((ing, index) => (
+          {recipe.ingredients?.map((ing, index) => (
             <li key={index}>
               {ing.original}
             </li>

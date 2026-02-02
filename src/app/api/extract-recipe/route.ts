@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     // Find JSON-LD script tag
     let jsonld = null;
-    let parseErrors = [];
+    let parseErrors: string[] = [];
     
     $('script[type="application/ld+json"]').each((_, element) => {
       try {
