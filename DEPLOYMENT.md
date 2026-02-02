@@ -33,6 +33,7 @@ services:
       - ./data:/app/data
     environment:
       - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 ```
 
 3. Note the stack ID and endpoint ID for GitHub secrets
