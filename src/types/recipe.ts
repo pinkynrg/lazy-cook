@@ -35,6 +35,7 @@ export interface Settings {
   enableBreakfast: boolean;
   enableLunch: boolean;
   enableDinner: boolean;
+  currentPlanName?: string;
 }
 
 export interface Ingredient {

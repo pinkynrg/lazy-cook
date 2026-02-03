@@ -78,12 +78,12 @@ export default function Home() {
     }
   };
 
-  const updateRecipeServings = async (id: number, servings: number) => {
+  const updateRecipeServings = async (id: number, servings: string) => {
     try {
       const response = await fetch('/api/recipes/update-servings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, servings }),
+        body: JSON.stringify({ id, servings: parseInt(servings) }),
       });
 
       if (response.ok) {
@@ -94,12 +94,12 @@ export default function Home() {
     }
   };
 
-  const updateRecipeDay = async (id: number, day: string | null) => {
+  const updateRecipeDay = async (id: number, day: number | null) => {
     try {
       const response = await fetch('/api/recipes/update-day', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, day }),
+        body: JSON.stringify({ id, dayOfWeek: day }),
       });
 
       if (response.ok) {
@@ -126,7 +126,7 @@ export default function Home() {
     }
   };
 
-  const addRecipeAssignment = async (recipeId: number, day: string, meal: string, servings?: number) => {
+  const addRecipeAssignment = async (recipeId: number, day: number, meal: 'breakfast' | 'lunch' | 'dinner', servings?: number) => {
     try {
       const response = await fetch('/api/recipe-assignments', {
         method: 'POST',
@@ -174,12 +174,12 @@ export default function Home() {
     }
   };
 
-  const moveAssignment = async (assignmentId: number, newDay: string, newMeal: string) => {
+  const moveAssignment = async (assignmentId: number, newDay: number, newMeal: 'breakfast' | 'lunch' | 'dinner') => {
     try {
       const response = await fetch('/api/recipe-assignments/update-day', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: assignmentId, day: newDay, meal: newMeal }),
+        body: JSON.stringify({ assignmentId, dayOfWeek: newDay, mealType: newMeal }),
       });
 
       if (response.ok) {

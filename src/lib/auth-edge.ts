@@ -15,7 +15,18 @@ export interface SessionPayload {
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as SessionPayload;
+    
+    // Validate that payload has required fields
+    if (
+      typeof payload.userId === 'number' &&
+      typeof payload.username === 'string' &&
+      typeof payload.householdId === 'number' &&
+      typeof payload.exp === 'number'
+    ) {
+      return payload as unknown as SessionPayload;
+    }
+    
+    return null;
   } catch (error) {
     return null;
   }
