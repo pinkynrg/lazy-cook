@@ -1,6 +1,6 @@
 // Page-level layout styles
 .taskActions {
-  padding: 0 0 24px 0;
+  padding: 24px 24px 24px 24px;
   margin-bottom: 24px;
 
   h2 {
@@ -18,16 +18,14 @@
 }
 
 .taskFilter {
-  padding: 0 0 16px 0;
-  margin-bottom: 24px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 2px solid var(--border-light);
 
   label {
     font-weight: 500;
     color: var(--text-primary);
+    font-size: 0.95rem;
   }
 
   select {
@@ -41,25 +39,178 @@
 }
 
 .taskStats {
-  padding: 0 0 24px 0;
+  padding: 0 24px 24px 24px;
   margin-bottom: 24px;
+}
+
+.statsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
 
   h2 {
-    margin: 0 0 20px 0;
+    margin: 0;
     color: var(--text-primary);
     font-size: 1.5rem;
     font-weight: 700;
   }
 }
 
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
+.statsTable {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
+.taskSection {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.taskHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid var(--border);
+}
+
+.taskIcon {
+  font-size: 1.75rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.taskLabel {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.userBars {
+  padding: 4px;
+}
+
+.userBar {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.needsToDoIt {
+    background: linear-gradient(90deg, #fef2f2 0%, #fff 100%);
+    border-left: 4px solid #ef4444;
+    padding-left: 16px;
+    
+    .userName {
+      font-weight: 700;
+      color: #dc2626;
+    }
+
+    .countBadge {
+      background: #ef4444;
+      color: white;
+    }
+  }
+
+  &:hover {
+    background: #fafbfc;
+  }
+}
+
+.userInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
+
+.userStats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 100px;
+  justify-content: flex-end;
+}
+
+.countBadge {
+  background: var(--text-primary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: center;
+}
+
+.percentage {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: right;
+}
+
+.barContainer {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.nextUpBadge {
+  margin-top: 8px;
+  display: inline-block;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  white-space: nowrap;
+}
+
+
+
 .taskHistory {
-  padding: 0;
+  padding: 0 24px 24px 24px;
 
   h2 {
     margin: 0 0 20px 0;
@@ -76,11 +227,77 @@
 }
 
 @media (max-width: 768px) {
+  .taskActions,
+  .taskStats,
+  .taskHistory {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
   .taskButtons {
     grid-template-columns: 1fr;
   }
-  
-  .statsGrid {
-    grid-template-columns: 1fr;
+
+  .statsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    .taskFilter {
+      width: 100%;
+      
+      select {
+        flex: 1;
+      }
+    }
+  }
+
+  .statsTable {
+    gap: 16px;
+  }
+
+  .taskHeader {
+    padding: 14px 16px;
+  }
+
+  .taskIcon {
+    font-size: 1.5rem;
+  }
+
+  .taskLabel {
+    font-size: 1rem;
+  }
+
+  .userBar {
+    padding: 14px 16px;
+
+    &.needsToDoIt {
+      padding-left: 12px;
+    }
+  }
+
+  .userName {
+    font-size: 0.9rem;
+    max-width: 180px;
+  }
+
+  .countBadge {
+    padding: 3px 10px;
+    font-size: 0.85rem;
+    min-width: 28px;
+  }
+
+  .percentage {
+    font-size: 0.8rem;
+  }
+
+  .nextUpBadge {
+    margin-top: 8px;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .barContainer {
+    height: 6px;
   }
 }

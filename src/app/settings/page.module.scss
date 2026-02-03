@@ -1,0 +1,32 @@
+// Settings Page
+.pageContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.pageHeader {
+  margin-bottom: 30px;
+  padding: 20px 0;
+  text-align: center;
+
+  h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  p {
+    color: var(--text-secondary);
+  }
+}
+
+.pageContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}

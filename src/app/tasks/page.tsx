@@ -118,29 +118,70 @@ export default function TasksPage() {
           </div>
         </section>
 
-        {/* Time Filter */}
-        <section className={styles.taskFilter}>
-          <label>Mostra ultimi:</label>
-          <select value={days} onChange={(e) => setDays(parseInt(e.target.value))}>
-            <option value="7">7 giorni</option>
-            <option value="14">14 giorni</option>
-            <option value="30">30 giorni</option>
-          </select>
-        </section>
-
         {/* Stats by User */}
         {Object.keys(userStats).length > 0 && (
           <section className={styles.taskStats}>
-            <h2>Statistiche ({days} giorni)</h2>
-            <div className={styles.statsGrid}>
-              {Object.entries(userStats).map(([username, tasks]) => (
-                <TaskStatsCard
-                  key={username}
-                  username={username}
-                  tasks={tasks}
-                  taskLabels={taskLabels}
-                />
-              ))}
+            <div className={styles.statsHeader}>
+              <h2>Statistiche</h2>
+              <div className={styles.taskFilter}>
+                <label>Mostra ultimi:</label>
+                <select value={days} onChange={(e) => setDays(parseInt(e.target.value))}>
+                  <option value="7">7 giorni</option>
+                  <option value="14">14 giorni</option>
+                  <option value="30">30 giorni</option>
+                </select>
+              </div>
+            </div>
+            <div className={styles.statsTable}>
+              {Object.entries(taskLabels).map(([type, { icon, label, color }]) => {
+                const allCounts = Object.entries(userStats).map(([username, userTasks]) => ({
+                  username,
+                  count: userTasks[type] || 0
+                }));
+                const maxCount = Math.max(...allCounts.map(u => u.count), 1);
+                const minCount = Math.min(...allCounts.map(u => u.count));
+                const totalCount = allCounts.reduce((sum, u) => sum + u.count, 0);
+                
+                return (
+                  <div key={type} className={styles.taskSection}>
+                    <div className={styles.taskHeader}>
+                      <span className={styles.taskIcon} style={{ color }}>{icon}</span>
+                      <span className={styles.taskLabel}>{label}</span>
+                    </div>
+                    <div className={styles.userBars}>
+                      {allCounts.map(({ username, count }) => {
+                        const percentage = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+                        const barWidth = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                        const isLowest = count === minCount && allCounts.length > 1 && totalCount > 0;
+                        
+                        return (
+                          <div key={username} className={`${styles.userBar} ${isLowest ? styles.needsToDoIt : ''}`}>
+                            <div className={styles.userInfo}>
+                              <span className={styles.userName}>{username}</span>
+                              <span className={styles.userStats}>
+                                <span className={styles.countBadge}>{count}</span>
+                                {totalCount > 0 && (
+                                  <span className={styles.percentage}>{percentage}%</span>
+                                )}
+                              </span>
+                            </div>
+                            <div className={styles.barContainer}>
+                              <div 
+                                className={styles.bar} 
+                                style={{ 
+                                  width: `${barWidth}%`,
+                                  background: color
+                                }}
+                              />
+                            </div>
+                            {isLowest && <div className={styles.nextUpBadge}>IL TUO TURNO! 🎯</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}

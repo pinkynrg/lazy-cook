@@ -1,0 +1,122 @@
+// Saved Plans Component
+.savedPlansCompact {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.savedPlansSection {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.savedPlansHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.savedPlansTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+  }
+}
+
+.planSaveSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.planNameInputWrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.planNameInput,
+.planNameInputCompact {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(91, 71, 209, 0.1);
+  }
+}
+
+.savedPlansActions {
+  display: flex;
+  gap: 8px;
+}
+
+.savedPlansContent {
+  margin-top: 20px;
+}
+
+.savedPlansList,
+.savedPlansListCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.savedPlanCard,
+.savedPlanItemCompact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--border-light);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: white;
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+  }
+}
+
+.savedPlanInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.savedPlanName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.savedPlanDate {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.savedPlanActions {
+  display: flex;
+  gap: 8px;
+}

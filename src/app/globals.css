@@ -480,7 +480,6 @@ section {
   background: var(--card-bg);
   padding: 25px;
   border-radius: 12px;
-  box-shadow: var(--shadow);
 }
 
 h2 {
@@ -3190,12 +3189,7 @@ h2 {
 .page-content {
   background: white;
   border-radius: 16px;
-  padding: 30px;
   box-shadow: var(--shadow-md);
-}
-
-.recipes-section {
-  margin-bottom: 40px;
 }
 
 .recipes-section:last-child {
@@ -3327,9 +3321,6 @@ h2 {
     font-size: 2rem;
   }
 
-  .page-content {
-    padding: 20px;
-  }
 
   .settings-grid {
     grid-template-columns: 1fr;

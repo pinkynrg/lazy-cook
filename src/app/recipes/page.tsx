@@ -10,7 +10,6 @@ import { jsonldToRecipe } from '@/lib/recipeParser';
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [libraryExpanded, setLibraryExpanded] = useState(true);
 
   useEffect(() => {
     loadRecipesFromDb();
@@ -61,26 +60,6 @@ export default function RecipesPage() {
     }
   };
 
-  const handleExtractRecipe = async (url: string) => {
-    try {
-      const response = await fetch('/api/extract-recipe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.jsonld) {
-          const recipe = jsonldToRecipe(data.jsonld);
-          addRecipe(recipe);
-        }
-      }
-    } catch (error) {
-      console.error('Error extracting recipe:', error);
-    }
-  };
-
   return (
     <div className="page-container">
       <div className="page-header">
@@ -92,21 +71,14 @@ export default function RecipesPage() {
         <section className="recipes-section">
           <div className="section-header">
             <h2>
-              <button
-                className="collapse-btn"
-                onClick={() => setLibraryExpanded(!libraryExpanded)}
-              >
-                <i className={`bi bi-chevron-${libraryExpanded ? 'down' : 'right'}`}></i>
-              </button>
               Aggiungi Nuova Ricetta
             </h2>
           </div>
 
-          {libraryExpanded && (
-            <div className="section-content">
-              <RecipeForm onAddRecipe={addRecipe} onExtractRecipe={handleExtractRecipe} />
-            </div>
-          )}
+
+          <div className="section-content">
+            <RecipeForm onAddRecipe={addRecipe}/>
+          </div>
         </section>
 
         <section className="recipes-section">

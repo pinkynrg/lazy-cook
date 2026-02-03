@@ -1,0 +1,102 @@
+// Shared Button Styles
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btnPrimary {
+  @extend .btn;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(91, 71, 209, 0.3);
+  }
+}
+
+.btnSecondary {
+  @extend .btn;
+  background: var(--border-light);
+  color: var(--text-primary);
+
+  &:hover:not(:disabled) {
+    background: var(--border);
+    transform: translateY(-2px);
+  }
+}
+
+.btnOutline {
+  @extend .btn;
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+
+  &:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+  }
+}
+
+.btnDanger {
+  @extend .btn;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+
+  &:hover:not(:disabled) {
+    background: #fecaca;
+    border-color: #dc2626;
+  }
+}
+
+.btnSmall {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.btnText {
+  @extend .btn;
+  background: transparent;
+  color: var(--primary-color);
+  padding: 6px 12px;
+
+  &:hover:not(:disabled) {
+    background: var(--border-light);
+  }
+}
+
+.btnIcon {
+  @extend .btn;
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+
+  i {
+    margin: 0;
+  }
+}
+
+.btnBlock {
+  width: 100%;
+}
+
+.btnCompact {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
