@@ -51,9 +51,12 @@ export default function GroceryPage() {
     }
   };
 
-  const toggleGroceryItemChecked = async (index: number) => {
-    const updatedList = [...groceryList];
-    updatedList[index].checked = !updatedList[index].checked;
+  const toggleGroceryItemChecked = async (itemId: number | undefined, checked: boolean) => {
+    if (!itemId) return;
+    
+    const updatedList = groceryList.map(item => 
+      item.id === itemId ? { ...item, checked } : item
+    );
     setGroceryList(updatedList);
 
     try {
