@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 // GET all recipe day assignments
 export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const assignments = db.prepare('SELECT * FROM recipe_day_assignments').all();
+    const assignments = db.prepare('SELECT * FROM recipe_day_assignments WHERE householdId = ?').all(session.householdId);
     return NextResponse.json({ assignments });
   } catch (error: any) {
     console.error('Error fetching assignments:', error);
@@ -17,6 +23,11 @@ export async function GET() {
 
 // POST add a recipe to a day (allows duplicates)
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { recipeId, dayOfWeek, mealType, plannedServings } = await request.json();
 
@@ -37,8 +48,8 @@ export async function POST(request: NextRequest) {
     const servings = plannedServings || 2; // Default to 2 if not provided
 
     const result = db.prepare(
-      'INSERT INTO recipe_day_assignments (recipeId, dayOfWeek, mealType, plannedServings) VALUES (?, ?, ?, ?)'
-    ).run(recipeId, dayOfWeek, mealType, servings);
+      'INSERT INTO recipe_day_assignments (recipeId, dayOfWeek, mealType, plannedServings, householdId) VALUES (?, ?, ?, ?, ?)'
+    ).run(recipeId, dayOfWeek, mealType, servings, session.householdId);
 
     return NextResponse.json({ success: true, assignmentId: result.lastInsertRowid });
   } catch (error: any) {
@@ -52,6 +63,11 @@ export async function POST(request: NextRequest) {
 
 // DELETE remove a specific assignment
 export async function DELETE(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { assignmentId } = await request.json();
 
@@ -62,7 +78,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    db.prepare('DELETE FROM recipe_day_assignments WHERE id = ?').run(assignmentId);
+    db.prepare('DELETE FROM recipe_day_assignments WHERE id = ? AND householdId = ?').run(assignmentId, session.householdId);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting assignment:', error);

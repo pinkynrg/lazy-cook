@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 // POST restore a saved plan
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { planId } = await request.json();
 
@@ -15,18 +21,18 @@ export async function POST(request: NextRequest) {
 
     // Get saved plan recipes
     const savedRecipes = db.prepare(
-      'SELECT * FROM saved_plan_recipes WHERE planId = ? ORDER BY id'
-    ).all(planId) as any[];
+      'SELECT spr.* FROM saved_plan_recipes spr JOIN saved_plans sp ON spr.planId = sp.id WHERE spr.planId = ? AND sp.householdId = ? ORDER BY spr.id'
+    ).all(planId, session.householdId) as any[];
 
     // Get saved plan assignments  
     const savedAssignments = db.prepare(
-      'SELECT * FROM saved_plan_assignments WHERE planId = ? ORDER BY id'
-    ).all(planId) as any[];
+      'SELECT spa.* FROM saved_plan_assignments spa JOIN saved_plans sp ON spa.planId = sp.id WHERE spa.planId = ? AND sp.householdId = ? ORDER BY spa.id'
+    ).all(planId, session.householdId) as any[];
 
     // Get saved eating out meals
     const savedEatingOut = db.prepare(
-      'SELECT * FROM saved_plan_eating_out WHERE planId = ? ORDER BY id'
-    ).all(planId) as any[];
+      'SELECT speo.* FROM saved_plan_eating_out speo JOIN saved_plans sp ON speo.planId = sp.id WHERE speo.planId = ? AND sp.householdId = ? ORDER BY speo.id'
+    ).all(planId, session.householdId) as any[];
 
     if (savedAssignments.length === 0) {
       return NextResponse.json(
@@ -44,7 +50,7 @@ export async function POST(request: NextRequest) {
     console.log(`[RESTORE] Found ${savedRecipes.length} saved recipes to process`);
 
     // Get all existing recipes once
-    const allExistingRecipes = db.prepare('SELECT id, jsonldSource FROM recipes').all() as any[];
+    const allExistingRecipes = db.prepare('SELECT id, jsonldSource FROM recipes WHERE householdId = ?').all(session.householdId) as any[];
     console.log(`[RESTORE] Found ${allExistingRecipes.length} existing recipes in database`);
 
     // Restore recipes and build mapping
@@ -99,8 +105,8 @@ export async function POST(request: NextRequest) {
         console.log(`[RESTORE]   → Creating NEW recipe in database`);
         const now = new Date().toISOString();
         const result = db.prepare(
-          'INSERT INTO recipes (jsonldSource, userOverrides, dateAdded) VALUES (?, ?, ?)'
-        ).run(savedRecipe.recipeJsonld, savedRecipe.recipeOverrides || null, now);
+          'INSERT INTO recipes (jsonldSource, userOverrides, dateAdded, householdId) VALUES (?, ?, ?, ?)'
+        ).run(savedRecipe.recipeJsonld, savedRecipe.recipeOverrides || null, now, session.householdId);
         
         const newRecipeId = result.lastInsertRowid as number;
         console.log(`[RESTORE]   ✓ Created new recipe with ID ${newRecipeId}`);
@@ -117,14 +123,14 @@ export async function POST(request: NextRequest) {
     console.log(`[RESTORE] Total new recipes created: ${restoredRecipes}`);
 
     // Clear current assignments
-    db.prepare('DELETE FROM recipe_day_assignments').run();
+    db.prepare('DELETE FROM recipe_day_assignments WHERE householdId = ?').run(session.householdId);
 
     // Clear eating out meals
-    db.prepare('DELETE FROM eating_out_meals').run();
+    db.prepare('DELETE FROM eating_out_meals WHERE householdId = ?').run(session.householdId);
 
     // Restore assignments with mapped recipe IDs
     const insertAssignment = db.prepare(
-      'INSERT INTO recipe_day_assignments (recipeId, dayOfWeek, mealType, plannedServings) VALUES (?, ?, ?, ?)'
+      'INSERT INTO recipe_day_assignments (recipeId, dayOfWeek, mealType, plannedServings, householdId) VALUES (?, ?, ?, ?, ?)'
     );
 
     let restoredAssignments = 0;
@@ -135,7 +141,8 @@ export async function POST(request: NextRequest) {
           newRecipeId,
           assignment.dayOfWeek,
           assignment.mealType,
-          assignment.plannedServings
+          assignment.plannedServings,
+          session.householdId
         );
         restoredAssignments++;
       }
@@ -143,13 +150,14 @@ export async function POST(request: NextRequest) {
 
     // Restore eating out meals
     const insertEatingOut = db.prepare(
-      'INSERT INTO eating_out_meals (dayOfWeek, mealType) VALUES (?, ?)'
+      'INSERT INTO eating_out_meals (dayOfWeek, mealType, householdId) VALUES (?, ?, ?)'
     );
 
     for (const meal of savedEatingOut) {
       insertEatingOut.run(
         meal.dayOfWeek,
-        meal.mealType
+        meal.mealType,
+        session.householdId
       );
     }
 

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 // PATCH update assignment servings
 export async function PATCH(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { assignmentId, plannedServings } = await request.json();
 
@@ -13,8 +19,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    db.prepare('UPDATE recipe_day_assignments SET plannedServings = ? WHERE id = ?')
-      .run(plannedServings, assignmentId);
+    db.prepare('UPDATE recipe_day_assignments SET plannedServings = ? WHERE id = ? AND householdId = ?')
+      .run(plannedServings, assignmentId, session.householdId);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import type { GroceryItem } from '@/types/recipe';
+import { getSession } from '@/lib/auth';
 
 // GET all grocery items
 export async function GET() {
   try {
-    const items = db.prepare('SELECT * FROM grocery_items ORDER BY sortOrder, id').all();
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const items = db.prepare('SELECT * FROM grocery_items WHERE householdId = ? ORDER BY sortOrder, id').all(session.householdId);
     
     const groceryList: GroceryItem[] = items.map((item: any) => ({
       id: item.id,
@@ -30,17 +36,22 @@ export async function GET() {
 // POST save entire grocery list (replaces existing)
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { groceryList } = await request.json();
 
     // Start transaction
     const transaction = db.transaction(() => {
-      // Clear existing items
-      db.prepare('DELETE FROM grocery_items').run();
+      // Clear existing items for this user
+      db.prepare('DELETE FROM grocery_items WHERE householdId = ?').run(session.householdId);
 
       // Insert new items with sortOrder
       const insert = db.prepare(`
-        INSERT INTO grocery_items (name, quantities, original, normalized, totalQuantity, checked, sortOrder)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO grocery_items (name, quantities, original, normalized, totalQuantity, checked, sortOrder, householdId)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       groceryList.forEach((item: GroceryItem, index: number) => {
@@ -51,7 +62,8 @@ export async function POST(request: NextRequest) {
           item.normalized ? 1 : 0,
           item.totalQuantity || null,
           item.checked ? 1 : 0,
-          index // Preserve order
+          index, // Preserve order
+          session.householdId
         );
       });
     });
@@ -71,10 +83,15 @@ export async function POST(request: NextRequest) {
 // PATCH update single item (toggle checked)
 export async function PATCH(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id, checked } = await request.json();
 
-    db.prepare('UPDATE grocery_items SET checked = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?')
-      .run(checked ? 1 : 0, id);
+    db.prepare('UPDATE grocery_items SET checked = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND householdId = ?')
+      .run(checked ? 1 : 0, id, session.householdId);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -89,7 +106,12 @@ export async function PATCH(request: NextRequest) {
 // DELETE clear all grocery items
 export async function DELETE() {
   try {
-    db.prepare('DELETE FROM grocery_items').run();
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    db.prepare('DELETE FROM grocery_items WHERE userId = ?').run(session.userId);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error clearing grocery list:', error);

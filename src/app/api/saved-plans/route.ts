@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 // GET all saved plans
 export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const plans = db.prepare('SELECT * FROM saved_plans ORDER BY createdAt DESC').all();
+    const plans = db.prepare('SELECT * FROM saved_plans WHERE householdId = ? ORDER BY createdAt DESC').all(session.householdId);
     return NextResponse.json({ plans });
   } catch (error: any) {
     console.error('Error fetching saved plans:', error);
@@ -17,6 +23,11 @@ export async function GET() {
 
 // POST save current plan
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { name } = await request.json();
 
@@ -28,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current assignments
-    const currentAssignments = db.prepare('SELECT * FROM recipe_day_assignments').all() as any[];
+    const currentAssignments = db.prepare('SELECT * FROM recipe_day_assignments WHERE householdId = ?').all(session.householdId) as any[];
 
     if (currentAssignments.length === 0) {
       return NextResponse.json(
@@ -38,15 +49,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get eating out meals
-    const eatingOutMeals = db.prepare('SELECT * FROM eating_out_meals').all() as any[];
+    const eatingOutMeals = db.prepare('SELECT * FROM eating_out_meals WHERE householdId = ?').all(session.householdId) as any[];
 
     // Get unique recipe IDs from assignments
     const recipeIds = [...new Set(currentAssignments.map(a => a.recipeId))];
 
     // Create saved plan
     const result = db.prepare(
-      'INSERT INTO saved_plans (name, description) VALUES (?, ?)'
-    ).run(name, null);
+      'INSERT INTO saved_plans (name, description, householdId) VALUES (?, ?, ?)'
+    ).run(name, null, session.householdId);
 
     const planId = result.lastInsertRowid;
 
@@ -56,7 +67,7 @@ export async function POST(request: NextRequest) {
     );
 
     for (const recipeId of recipeIds) {
-      const recipe = db.prepare('SELECT * FROM recipes WHERE id = ?').get(recipeId) as any;
+      const recipe = db.prepare('SELECT * FROM recipes WHERE id = ? AND householdId = ?').get(recipeId, session.householdId) as any;
       if (recipe) {
         insertRecipe.run(
           planId,
@@ -107,6 +118,11 @@ export async function POST(request: NextRequest) {
 
 // DELETE a saved plan
 export async function DELETE(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { planId } = await request.json();
 
@@ -117,7 +133,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    db.prepare('DELETE FROM saved_plans WHERE id = ?').run(planId);
+    db.prepare('DELETE FROM saved_plans WHERE id = ? AND householdId = ?').run(planId, session.householdId);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting saved plan:', error);

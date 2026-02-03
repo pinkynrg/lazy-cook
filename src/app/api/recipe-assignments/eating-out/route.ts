@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 // GET all eating out meals
 export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const eatingOutMeals = db.prepare('SELECT * FROM eating_out_meals').all();
+    const eatingOutMeals = db.prepare('SELECT * FROM eating_out_meals WHERE householdId = ?').all(session.householdId);
     return NextResponse.json({ eatingOutMeals });
   } catch (error: any) {
     console.error('Error fetching eating out meals:', error);
@@ -17,6 +23,11 @@ export async function GET() {
 
 // POST toggle eating out status for a meal
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { dayOfWeek, mealType, eatingOut } = await request.json();
 
@@ -37,18 +48,18 @@ export async function POST(request: NextRequest) {
     if (eatingOut) {
       // When marking as eating out, delete all recipe assignments for this day/meal
       db.prepare(
-        'DELETE FROM recipe_day_assignments WHERE dayOfWeek = ? AND mealType = ?'
-      ).run(dayOfWeek, mealType);
+        'DELETE FROM recipe_day_assignments WHERE dayOfWeek = ? AND mealType = ? AND householdId = ?'
+      ).run(dayOfWeek, mealType, session.householdId);
       
       // Insert eating out record
       db.prepare(
-        'INSERT OR IGNORE INTO eating_out_meals (dayOfWeek, mealType) VALUES (?, ?)'
-      ).run(dayOfWeek, mealType);
+        'INSERT OR IGNORE INTO eating_out_meals (dayOfWeek, mealType, householdId) VALUES (?, ?, ?)'
+      ).run(dayOfWeek, mealType, session.householdId);
     } else {
       // Remove the eating out record
       db.prepare(
-        'DELETE FROM eating_out_meals WHERE dayOfWeek = ? AND mealType = ?'
-      ).run(dayOfWeek, mealType);
+        'DELETE FROM eating_out_meals WHERE dayOfWeek = ? AND mealType = ? AND householdId = ?'
+      ).run(dayOfWeek, mealType, session.householdId);
     }
 
     return NextResponse.json({ success: true, eatingOut: eatingOut ? 1 : 0 });

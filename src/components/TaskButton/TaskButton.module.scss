@@ -1,0 +1,67 @@
+.taskButton {
+  background: white;
+  border: none;
+  border-radius: 20px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.05rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    padding: 3px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(91, 71, 209, 0.2);
+
+    &::before {
+      opacity: 1;
+    }
+
+    .icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(-2px) scale(1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.icon {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.label {
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}

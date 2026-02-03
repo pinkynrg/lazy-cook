@@ -1,0 +1,86 @@
+// Page-level layout styles
+.taskActions {
+  padding: 0 0 24px 0;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.taskButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.taskFilter {
+  padding: 0 0 16px 0;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 2px solid var(--border-light);
+
+  label {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+}
+
+.taskStats {
+  padding: 0 0 24px 0;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.taskHistory {
+  padding: 0;
+
+  h2 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .taskButtons {
+    grid-template-columns: 1fr;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
