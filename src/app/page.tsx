@@ -161,9 +161,9 @@ export default function Home() {
   const updateAssignmentServings = async (assignmentId: number, servings: number) => {
     try {
       const response = await fetch('/api/recipe-assignments/update-servings', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: assignmentId, servings }),
+        body: JSON.stringify({ assignmentId, plannedServings: servings }),
       });
 
       if (response.ok) {
