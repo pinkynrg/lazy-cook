@@ -203,6 +203,7 @@ export default function TasksPage() {
   };
 
   const taskLabels: { [key: string]: { label: string; icon: string; color: string } } = {
+    shopping: { label: 'Fatto la Spesa', icon: '🛒', color: '#10b981' },
     cooking: { label: 'Fatto Cucina', icon: '👨‍🍳', color: '#f59e0b' },
     dishes: { label: 'Lavato i Piatti', icon: '🧽', color: '#3b82f6' },
   };
@@ -240,7 +241,7 @@ export default function TasksPage() {
         <p>Traccia chi fa cosa in casa</p>
       </div>
 
-      <div className="page-content">
+      <div className="page-content" style={{ padding: '24px' }}>
         {/* Missing Tasks - Step-by-Step */}
         {missingTasks.length > 0 && householdMembers.length > 0 && (
           <section className={styles.missingTasks}>

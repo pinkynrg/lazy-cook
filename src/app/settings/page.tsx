@@ -70,7 +70,7 @@ export default function SettingsPage() {
         <p>Configura le preferenze per il tuo piano pasti</p>
       </div>
 
-      <div className="page-content">
+      <div className="page-content" style={{ padding: '24px' }}>
         <div className="settings-grid">
           <div className="setting-card">
             <div className="setting-header">
