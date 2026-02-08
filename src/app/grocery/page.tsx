@@ -172,6 +172,9 @@ export default function GroceryPage() {
             existing.sources?.push({
               recipeName: recipe.name || 'Ricetta senza nome',
               recipeId: recipe.id,
+              assignmentId: assignment.id,
+              dayOfWeek: assignment.dayOfWeek,
+              mealType: assignment.mealType,
               quantity: scaledQuantity,
               originalText: ing.original,
             });
@@ -185,6 +188,9 @@ export default function GroceryPage() {
               sources: [{
                 recipeName: recipe.name || 'Ricetta senza nome',
                 recipeId: recipe.id,
+                assignmentId: assignment.id,
+                dayOfWeek: assignment.dayOfWeek,
+                mealType: assignment.mealType,
                 quantity: scaledQuantity,
                 originalText: ing.original,
               }],
@@ -315,9 +321,18 @@ export default function GroceryPage() {
           }
         }
         
-        // Deduplicate by recipeId + quantity
+        // Deduplicate conservatively: do NOT collapse multiple meals in the week.
+        // Prefer assignmentId when present; fallback includes day/meal/originalText.
         const uniqueSources = Array.from(
-          new Map(foundSources.map(s => [`${s.recipeId}-${s.quantity}`, s])).values()
+          new Map(
+            foundSources.map((s) => {
+              const assignmentPart = s.assignmentId !== undefined && s.assignmentId !== null
+                ? `a:${s.assignmentId}`
+                : `d:${s.dayOfWeek ?? 'x'}-m:${s.mealType ?? 'x'}`;
+              const key = `${assignmentPart}-r:${s.recipeId}-o:${s.originalText ?? ''}`;
+              return [key, s] as const;
+            })
+          ).values()
         );
 
         normalizedMap.set(nameLower, {

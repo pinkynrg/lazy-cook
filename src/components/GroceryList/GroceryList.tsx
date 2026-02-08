@@ -16,6 +16,73 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
   const [normalizing, setNormalizing] = useState(false);
   const [inspectingItem, setInspectingItem] = useState<GroceryItem | null>(null);
 
+  const getAggregatedSources = (item: GroceryItem) => {
+    const sources = Array.isArray(item.sources) ? item.sources : [];
+    const byRecipe = new Map<number, {
+      recipeId: number;
+      recipeName: string;
+      assignmentIds: Set<number>;
+      mealTypeCounts: Record<'breakfast' | 'lunch' | 'dinner', number>;
+      quantities: string[];
+    }>();
+
+    for (const source of sources) {
+      const recipeId = Number(source.recipeId);
+      if (!Number.isFinite(recipeId)) continue;
+
+      const recipeName = (source.recipeName ?? 'Ricetta').toString();
+      const quantity = (source.quantity ?? '').toString().trim();
+      const assignmentId = source.assignmentId !== undefined && source.assignmentId !== null ? Number(source.assignmentId) : null;
+      const mealType = source.mealType;
+
+      const existing = byRecipe.get(recipeId);
+      if (existing) {
+        if (assignmentId !== null && Number.isFinite(assignmentId)) {
+          existing.assignmentIds.add(assignmentId);
+        } else {
+          // Fallback if assignmentId is missing: count each source entry
+          existing.assignmentIds.add(existing.assignmentIds.size + 1_000_000);
+        }
+        if (mealType && (mealType === 'breakfast' || mealType === 'lunch' || mealType === 'dinner')) {
+          existing.mealTypeCounts[mealType] += 1;
+        }
+        if (quantity) existing.quantities.push(quantity);
+      } else {
+        const assignmentIds = new Set<number>();
+        if (assignmentId !== null && Number.isFinite(assignmentId)) {
+          assignmentIds.add(assignmentId);
+        } else {
+          assignmentIds.add(1_000_000);
+        }
+
+        byRecipe.set(recipeId, {
+          recipeId,
+          recipeName,
+          assignmentIds,
+          mealTypeCounts: { breakfast: mealType === 'breakfast' ? 1 : 0, lunch: mealType === 'lunch' ? 1 : 0, dinner: mealType === 'dinner' ? 1 : 0 },
+          quantities: quantity ? [quantity] : [],
+        });
+      }
+    }
+
+    return Array.from(byRecipe.values()).sort((a, b) => a.recipeName.localeCompare(b.recipeName));
+  };
+
+  const formatMealTypeCounts = (counts: Record<'breakfast' | 'lunch' | 'dinner', number>) => {
+    const parts: string[] = [];
+    if (counts.breakfast > 0) parts.push(`${counts.breakfast} colazioni`);
+    if (counts.lunch > 0) parts.push(`${counts.lunch} pranzi`);
+    if (counts.dinner > 0) parts.push(`${counts.dinner} cene`);
+    return parts.join(' + ');
+  };
+
+  const formatAggregatedQuantities = (quantities: string[]) => {
+    const cleaned = quantities.map(q => q.trim()).filter(Boolean);
+    if (cleaned.length === 0) return 'q.b.';
+    const unique = Array.from(new Set(cleaned));
+    return unique.join(' + ');
+  };
+
   const handleNormalize = async () => {
     setNormalizing(true);
     try {
@@ -187,23 +254,43 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
                 <strong>Totale:</strong> {inspectingItem.totalQuantity || inspectingItem.quantities.join(' + ') || 'q.b.'}
               </div>
               <div className="ingredient-sources">
-                <h4>Usato in:</h4>
-                {inspectingItem.sources?.map((source, idx) => (
-                  <div key={idx} className="source-item">
-                    <div className="source-recipe">{source.recipeName}</div>
-                    <div className="source-quantity">
-                      {(() => {
-                        const raw = (source.quantity ?? '').toString().trim();
-                        if (!raw) return 'q.b.';
-                        // If it's just a number, append ingredient name (e.g. "5" -> "5 uova")
-                        if (/^\d+(?:[.,]\d+)?$/.test(raw)) {
-                          return `${raw} ${inspectingItem.name.toLowerCase()}`;
-                        }
-                        return raw;
-                      })()}
-                    </div>
-                  </div>
-                ))}
+                {(() => {
+                  const aggregated = getAggregatedSources(inspectingItem);
+                  const totalMealTypeCounts = aggregated.reduce(
+                    (acc, r) => {
+                      acc.breakfast += r.mealTypeCounts.breakfast;
+                      acc.lunch += r.mealTypeCounts.lunch;
+                      acc.dinner += r.mealTypeCounts.dinner;
+                      return acc;
+                    },
+                    { breakfast: 0, lunch: 0, dinner: 0 }
+                  );
+                  const totalMealsText = formatMealTypeCounts(totalMealTypeCounts) || `${aggregated.reduce((sum, r) => sum + r.assignmentIds.size, 0)} pasti`;
+                  return (
+                    <>
+                      <h4>Usato in ({totalMealsText}):</h4>
+                      {aggregated.map((recipe) => (
+                        <div key={recipe.recipeId} className="source-item">
+                          <div className="source-recipe">
+                            {recipe.recipeName}{' '}
+                            <span className="ingredient-notes">
+                              ({formatMealTypeCounts(recipe.mealTypeCounts) || `${recipe.assignmentIds.size} ${recipe.assignmentIds.size === 1 ? 'pasto' : 'pasti'}`})
+                            </span>
+                          </div>
+                          <div className="source-quantity">
+                            {(() => {
+                              const raw = formatAggregatedQuantities(recipe.quantities);
+                              if (/^\d+(?:[.,]\d+)?$/.test(raw)) {
+                                return `${raw} ${inspectingItem.name.toLowerCase()}`;
+                              }
+                              return raw;
+                            })()}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>

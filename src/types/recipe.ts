@@ -56,6 +56,9 @@ export interface GroceryItem {
   sources?: Array<{ // Track which recipes contributed this ingredient
     recipeName: string;
     recipeId: number;
+    assignmentId?: number;
+    dayOfWeek?: number;
+    mealType?: 'breakfast' | 'lunch' | 'dinner';
     quantity: string;
     originalText: string;
   }>;
