@@ -241,7 +241,7 @@ export default function TasksPage() {
         <p>Traccia chi fa cosa in casa</p>
       </div>
 
-      <div className="page-content" style={{ padding: '24px' }}>
+      <div className="page-content" style={{ padding: '24px 0' }}>
         {/* Missing Tasks - Step-by-Step */}
         {missingTasks.length > 0 && householdMembers.length > 0 && (
           <section className={styles.missingTasks}>

@@ -16,9 +16,9 @@ export default function TaskHistoryItem({ icon, label, username, time, date, onD
       <div className={styles.content}>
         <span className={styles.label}>{label}</span>
         <span className={styles.user}>{username}</span>
-        <span className={styles.date}>{date}</span>
+        <span className={styles.date}>📅 {date}</span>
+        <span className={styles.time}>{time}</span>
       </div>
-      <span className={styles.time}>{time}</span>
       {onDelete && (
         <button 
           onClick={onDelete}

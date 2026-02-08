@@ -39,5 +39,18 @@ jobs:
                   --header 'X-API-Key: ${{ secrets.PORTAINER_TOKEN }}' \
                   --header 'Content-Type: application/json' \
                   --data '{
+                    "env": [
+                      {
+                        "name": "OPENAI_API_KEY",
+                        "value": "${{ secrets.OPENAI_API_KEY }}",
+                        "needsDeletion": false
+                      },
+                      {
+                        "name": "JWT_SECRET",
+                        "value": "${{ secrets.JWT_SECRET }}",
+                        "needsDeletion": false
+                      }
+                    ],
+                    "prune": false,
                     "pullImage": true
                   }'

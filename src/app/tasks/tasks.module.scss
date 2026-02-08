@@ -48,6 +48,7 @@
   justify-content: space-between;
   margin-bottom: 20px;
   gap: 16px;
+  padding: 0 24px;
 
   h2 {
     margin: 0;
@@ -97,7 +98,6 @@
 }
 
 .userBars {
-  padding: 4px;
 }
 
 .userBar {
@@ -214,6 +214,7 @@
     color: #dc2626;
     font-size: 1.5rem;
     font-weight: 700;
+    padding: 0 24px;
   }
 }
 
@@ -221,6 +222,7 @@
   color: var(--text-secondary);
   margin: 0 0 16px 0;
   font-size: 0.95rem;
+  padding: 0 24px;
 }
 
 .missingTasksMobile {
@@ -498,6 +500,7 @@
     color: var(--text-primary);
     font-size: 1.5rem;
     font-weight: 700;
+    padding: 0 24px;
   }
 }
 

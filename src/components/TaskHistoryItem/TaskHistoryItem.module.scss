@@ -53,9 +53,10 @@
 }
 
 .time {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin-top: 2px;
 }
 
 .deleteBtn {
