@@ -138,9 +138,6 @@ db.exec(`
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
   );
 
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_household_tasks_unique_date 
-    ON household_tasks(householdId, taskType, date(completedAt));
-
   CREATE INDEX IF NOT EXISTS idx_assignments_recipeId ON recipe_day_assignments(recipeId);
   CREATE INDEX IF NOT EXISTS idx_assignments_dayOfWeek ON recipe_day_assignments(dayOfWeek);
   CREATE INDEX IF NOT EXISTS idx_saved_plan_assignments_planId ON saved_plan_assignments(planId);
@@ -181,6 +178,36 @@ try {
     console.log('✅ Added householdId to settings table');
   } catch (e) {
     // Column already exists
+  }
+
+  // Clean up duplicate household tasks and create unique index
+  try {
+    // First check if index already exists
+    const indexExists = db.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='index' AND name='idx_household_tasks_unique_date'
+    `).get();
+
+    if (!indexExists) {
+      // Delete duplicates, keeping only the most recent task for each date/type combination
+      db.exec(`
+        DELETE FROM household_tasks 
+        WHERE id NOT IN (
+          SELECT MAX(id) 
+          FROM household_tasks 
+          GROUP BY householdId, taskType, date(completedAt)
+        )
+      `);
+      
+      // Now create the unique index
+      db.exec(`
+        CREATE UNIQUE INDEX idx_household_tasks_unique_date 
+        ON household_tasks(householdId, taskType, date(completedAt))
+      `);
+      console.log('✅ Created unique index on household_tasks');
+    }
+  } catch (e) {
+    console.log('⚠️ Unique index already exists or failed to create');
   }
 
   // Recreate settings table to support multiple households
