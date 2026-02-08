@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "pre-commit-check": "npm run type-check && npm run lint",
     "prepare": "husky"
   },
   "lint-staged": {

@@ -125,7 +125,7 @@ db.exec(`
     dayOfWeek INTEGER NOT NULL,
     mealType TEXT NOT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(dayOfWeek, mealType, householdId)
+    UNIQUE(dayOfWeek, mealType)
   );
 
   CREATE TABLE IF NOT EXISTS household_tasks (
