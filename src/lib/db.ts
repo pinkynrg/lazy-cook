@@ -372,7 +372,7 @@ try {
           INSERT INTO eating_out_meals (id, dayOfWeek, mealType, userId, householdId, createdAt)
           VALUES (?, ?, ?, ?, ?, ?)
         `);
-        for (const row of existingData) {
+        for (const row of existingData as any[]) {
           insert.run(row.id, row.dayOfWeek, row.mealType, row.userId || null, row.householdId || null, row.createdAt);
         }
       }
