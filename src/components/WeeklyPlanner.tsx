@@ -139,7 +139,9 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     setTimeout(() => {
       const element = document.getElementById(`day-${dayId}`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const yOffset = -80; // Offset for header
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
       }
     }, 100);
   };
@@ -154,7 +156,9 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
       setTimeout(() => {
         const element = document.getElementById(`day-${dayId}`);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const yOffset = -80; // Offset for header
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
         }
       }, 100);
     }
