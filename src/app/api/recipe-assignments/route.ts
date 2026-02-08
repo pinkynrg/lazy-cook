@@ -45,7 +45,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const servings = plannedServings || 2; // Default to 2 if not provided
+    const parsedServings = plannedServings === undefined || plannedServings === null
+      ? null
+      : (typeof plannedServings === 'string' ? Number(plannedServings.replace(',', '.')) : plannedServings);
+
+    const servings = parsedServings === null
+      ? 2
+      : (typeof parsedServings === 'number' && Number.isFinite(parsedServings) && parsedServings >= 1 ? parsedServings : null);
+
+    if (servings === null) {
+      return NextResponse.json(
+        { error: 'plannedServings deve essere un numero >= 1' },
+        { status: 400 }
+      );
+    }
 
     const result = db.prepare(
       'INSERT INTO recipe_day_assignments (recipeId, dayOfWeek, mealType, plannedServings, householdId) VALUES (?, ?, ?, ?, ?)'

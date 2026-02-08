@@ -413,6 +413,14 @@ try {
     console.log('eating_out_meals constraint migration skipped or already done:', e.message);
   }
 
+  // Add sources column to grocery_items
+  try {
+    db.exec(`ALTER TABLE grocery_items ADD COLUMN sources TEXT;`);
+    console.log('✅ Added sources column to grocery_items');
+  } catch (e) {
+    // Column already exists
+  }
+
 } catch (error) {
   console.error('Error running migrations:', error);
 }

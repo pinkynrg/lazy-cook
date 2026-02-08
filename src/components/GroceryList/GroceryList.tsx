@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import type { GroceryItem } from '@/types/recipe';
-import styles from './GroceryList.module.scss';
 
 interface GroceryListProps {
   groceryList: GroceryItem[];
@@ -15,6 +14,49 @@ interface GroceryListProps {
 
 export default function GroceryList({ groceryList, onNormalize, isNormalized, hasRecipes, onToggleChecked, onClearList }: GroceryListProps) {
   const [normalizing, setNormalizing] = useState(false);
+  const [inspectingItem, setInspectingItem] = useState<GroceryItem | null>(null);
+
+  const formatTotalsFromSources = (item: GroceryItem): string | null => {
+    if (!Array.isArray(item.sources) || item.sources.length === 0) return null;
+
+    const totalsByUnit = new Map<string, number>();
+    let hasAnyNumeric = false;
+
+    for (const source of item.sources) {
+      const raw = (source.quantity ?? '').toString().trim();
+      if (!raw || raw.toLowerCase() === 'q.b.' || raw.toLowerCase() === 'qb') continue;
+
+      const normalized = raw.replace(',', '.').trim();
+      const match = normalized.match(/^([0-9]+(?:\.[0-9]+)?)\s*(.*)$/);
+      if (!match) continue;
+
+      const value = Number(match[1]);
+      if (!Number.isFinite(value)) continue;
+
+      hasAnyNumeric = true;
+      const unit = (match[2] || '').trim().toLowerCase();
+      totalsByUnit.set(unit, (totalsByUnit.get(unit) ?? 0) + value);
+    }
+
+    if (!hasAnyNumeric) return null;
+
+    const parts: string[] = [];
+    for (const [unit, total] of totalsByUnit.entries()) {
+      const rounded = Math.round(total * 10) / 10;
+      const text = Number.isInteger(rounded) ? String(rounded) : String(rounded);
+      parts.push(unit ? `${text} ${unit}` : text);
+    }
+
+    // Put unitless totals last for readability
+    parts.sort((a, b) => {
+      const aHasUnit = /\s/.test(a);
+      const bHasUnit = /\s/.test(b);
+      if (aHasUnit === bHasUnit) return a.localeCompare(b);
+      return aHasUnit ? -1 : 1;
+    });
+
+    return parts.join(' + ');
+  };
 
   const handleNormalize = async () => {
     setNormalizing(true);
@@ -100,35 +142,59 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
       ) : (
         <>
           <div className="grocery-list">
-            {groceryList.map((item) => {
-              // Show AI-calculated total if available, otherwise show individual quantities
-              const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
+            {groceryList.map((item, index) => {
+              // Prefer totals computed from per-recipe sources (handles mixed units); fallback to AI/quantities
+              const sourceTotals = formatTotalsFromSources(item);
+              const quantityText = sourceTotals || item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
+              const hasSources = Array.isArray(item.sources) && item.sources.length > 0;
               return (
                 <div 
-                  key={item.id || item.name} 
+                  key={item.id || `${item.name}-${index}`}
                   className={`grocery-item ${item.checked ? 'checked' : ''}`}
-                  onClick={() => item.id && onToggleChecked(item.id, !item.checked)}
-                  style={{ cursor: item.id ? 'pointer' : 'default' }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <input
                     type="checkbox"
                     checked={item.checked || false}
-                    onChange={(e) => onToggleChecked(item.id, e.target.checked)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onToggleChecked(item.id, e.target.checked);
+                    }}
                     disabled={!item.id}
                     className="grocery-checkbox"
-                    onClick={(e) => e.stopPropagation()}
                   />
-                  <div className="grocery-item-content">
+                  <div 
+                    className="grocery-item-content"
+                    onClick={() => {
+                      if (item.sources && item.sources.length > 0) {
+                        setInspectingItem(item);
+                      }
+                    }}
+                  >
                     <div>
                       <div className="ingredient-name">
                         {item.name}
                       </div>
-                      {item.original.length > 1 && (
-                        <div className="ingredient-notes">{item.original.length} ricette</div>
+                      {item.sources && item.sources.length > 1 && (
+                        <div className="ingredient-notes">{item.sources.length} ricette</div>
                       )}
                     </div>
                     <div className="ingredient-quantity">{quantityText}</div>
                   </div>
+                  <button
+                    className="btn-inspect"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Inspecting item:', item);
+                      setInspectingItem(item);
+                    }}
+                    title="Vedi dettagli"
+                    style={{ 
+                      display: hasSources ? 'block' : 'none'
+                    }}
+                  >
+                    <i className="bi bi-info-circle"></i>
+                  </button>
                 </div>
               );
             })}
@@ -144,6 +210,47 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
             </button>
           </div>
         </>
+      )}
+
+      {/* Inspection Modal */}
+      {inspectingItem && (
+        <div className="modal-overlay" onClick={() => setInspectingItem(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{inspectingItem.name}</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setInspectingItem(null)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="ingredient-total">
+                <strong>Totale:</strong> {formatTotalsFromSources(inspectingItem) || inspectingItem.totalQuantity || inspectingItem.quantities.join(' + ')}
+              </div>
+              <div className="ingredient-sources">
+                <h4>Usato in:</h4>
+                {inspectingItem.sources?.map((source, idx) => (
+                  <div key={idx} className="source-item">
+                    <div className="source-recipe">{source.recipeName}</div>
+                    <div className="source-quantity">
+                      {(() => {
+                        const raw = (source.quantity ?? '').toString().trim();
+                        if (!raw) return 'q.b.';
+                        // If it's just a number, append ingredient name (e.g. "5" -> "5 uova")
+                        if (/^\d+(?:[.,]\d+)?$/.test(raw)) {
+                          return `${raw} ${inspectingItem.name.toLowerCase()}`;
+                        }
+                        return raw;
+                      })()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

@@ -21,6 +21,7 @@ export async function GET() {
       normalized: !!item.normalized,
       totalQuantity: item.totalQuantity,
       checked: !!item.checked,
+      sources: item.sources ? JSON.parse(item.sources) : undefined,
     }));
 
     return NextResponse.json({ groceryList });
@@ -50,8 +51,8 @@ export async function POST(request: NextRequest) {
 
       // Insert new items with sortOrder
       const insert = db.prepare(`
-        INSERT INTO grocery_items (name, quantities, original, normalized, totalQuantity, checked, sortOrder, householdId)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO grocery_items (name, quantities, original, normalized, totalQuantity, checked, sortOrder, householdId, sources)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       groceryList.forEach((item: GroceryItem, index: number) => {
@@ -63,7 +64,8 @@ export async function POST(request: NextRequest) {
           item.totalQuantity || null,
           item.checked ? 1 : 0,
           index, // Preserve order
-          session.householdId
+          session.householdId,
+          item.sources ? JSON.stringify(item.sources) : null
         );
       });
     });

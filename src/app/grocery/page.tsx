@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import GroceryList from '@/components/GroceryList';
+import GroceryList from '@/components/GroceryList/GroceryList';
 import type { GroceryItem, Recipe } from '@/types/recipe';
 
 export default function GroceryPage() {
@@ -66,8 +66,9 @@ export default function GroceryPage() {
       const response = await fetch('/api/grocery');
       if (response.ok) {
         const data = await response.json();
-        setGroceryList(Array.isArray(data.items) ? data.items : []);
-        setIsNormalized(data.isNormalized || false);
+        setGroceryList(data.groceryList || []);
+        // Check if any item is normalized to set the flag
+        setIsNormalized(data.groceryList?.some((item: GroceryItem) => item.normalized) || false);
       }
     } catch (error) {
       console.error('Error loading grocery list:', error);
@@ -130,7 +131,13 @@ export default function GroceryPage() {
 
         // Get base servings from recipe
         const baseServings = parseServings(recipe.servings);
-        const plannedServings = assignment.plannedServings || baseServings || 1;
+        const plannedServingsRaw = assignment.plannedServings;
+        const plannedServingsParsed = typeof plannedServingsRaw === 'string'
+          ? Number(plannedServingsRaw.replace(',', '.'))
+          : plannedServingsRaw;
+        const plannedServings = typeof plannedServingsParsed === 'number' && Number.isFinite(plannedServingsParsed) && plannedServingsParsed > 0
+          ? plannedServingsParsed
+          : (baseServings ?? 1);
 
         // Calculate scaling ratio
         const ratio = baseServings && baseServings > 0 
@@ -139,20 +146,48 @@ export default function GroceryPage() {
 
         // Scale each ingredient for this assignment
         recipe.ingredients.forEach(ing => {
-          const scaledQuantity = scaleIngredientQuantity(ing.quantity, ratio);
-          const key = (ing.normalized || ing.name).toLowerCase();
+          // Some ingredients come in as "5 uova" with empty quantity; recover that.
+          let ingredientName = ing.normalized || ing.name;
+          let ingredientQuantity = ing.quantity || '';
+
+          if (!ingredientQuantity || ingredientQuantity.trim() === '') {
+            const candidate = `${ingredientName}`.trim().replace(/^[-–•]\s*/, '');
+            const countMatch = candidate.match(/^(?:n\.?\s*)?([\d.,\/]+)\s+(.+)$/i);
+            if (countMatch) {
+              ingredientQuantity = countMatch[1].trim();
+              // Only update the display/grouping name if we are not using a normalized name
+              if (!ing.normalized) {
+                ingredientName = countMatch[2].trim();
+              }
+            }
+          }
+
+          const scaledQuantity = scaleIngredientQuantity(ingredientQuantity, ratio);
+          const key = (ingredientName || ing.name).toLowerCase();
           
           if (ingredientMap.has(key)) {
             const existing = ingredientMap.get(key)!;
             existing.quantities.push(scaledQuantity);
             existing.original.push(ing.original);
+            existing.sources?.push({
+              recipeName: recipe.name || 'Ricetta senza nome',
+              recipeId: recipe.id,
+              quantity: scaledQuantity,
+              originalText: ing.original,
+            });
           } else {
             ingredientMap.set(key, {
-              name: ing.normalized || ing.name,
+              name: ingredientName || ing.name,
               quantities: [scaledQuantity],
               original: [ing.original],
               normalized: false,
               checked: false,
+              sources: [{
+                recipeName: recipe.name || 'Ricetta senza nome',
+                recipeId: recipe.id,
+                quantity: scaledQuantity,
+                originalText: ing.original,
+              }],
             });
           }
         });
@@ -175,10 +210,18 @@ export default function GroceryPage() {
         return;
       }
 
-      // Step 2: Convert to flat ingredient strings for AI
-      const allIngredients = consolidatedList.flatMap(item => 
-        item.quantities.map(qty => `${item.name} ${qty}`.trim())
-      );
+      // Step 2: Convert to flat ingredient strings for AI, keeping track of sources
+      const ingredientsList: Array<{ text: string; sources: any[] }> = [];
+      consolidatedList.forEach(item => {
+        item.quantities.forEach(qty => {
+          ingredientsList.push({
+            text: `${item.name} ${qty}`.trim(),
+            sources: item.sources || []
+          });
+        });
+      });
+      
+      const allIngredients = ingredientsList.map(i => i.text);
 
       // Step 3: Normalize with AI
       const response = await fetch('/api/normalize-ingredients', {
@@ -193,21 +236,66 @@ export default function GroceryPage() {
       }
 
       const { normalized } = await response.json();
+      
+      console.log('AI normalized items:', normalized);
 
       // Step 4: Build final grocery list from AI results
-      const normalizedList: GroceryItem[] = normalized.map((item: any) => ({
-        name: item.normalizedName,
-        quantities: [item.totalQuantity],
-        original: [],
-        normalized: true,
-        totalQuantity: item.totalQuantity,
-        checked: false,
-      }));
+      // Keep track of all sources from the consolidated list
+      const allSourcesByIngredient = new Map<string, any[]>();
+      consolidatedList.forEach(item => {
+        if (item.sources && item.sources.length > 0) {
+          allSourcesByIngredient.set(item.name.toLowerCase(), item.sources);
+        }
+      });
+
+      // Create a map to ensure unique items by name (in case AI returns duplicates)
+      const normalizedMap = new Map<string, GroceryItem>();
+      
+      normalized.forEach((item: any) => {
+        const nameLower = item.normalizedName.toLowerCase();
+        
+        // If we already have this item, skip it (take first occurrence)
+        if (normalizedMap.has(nameLower)) {
+          console.warn('Duplicate normalized item found:', item.normalizedName);
+          return;
+        }
+        
+        // Try to find sources by matching ingredient names
+        const foundSources: any[] = [];
+        
+        // Check all original items for matches
+        for (const [originalName, sources] of allSourcesByIngredient.entries()) {
+          // Match if either name contains the other (fuzzy matching)
+          if (nameLower.includes(originalName) || originalName.includes(nameLower)) {
+            foundSources.push(...sources);
+          }
+        }
+        
+        // Deduplicate by recipeId + quantity
+        const uniqueSources = Array.from(
+          new Map(foundSources.map(s => [`${s.recipeId}-${s.quantity}`, s])).values()
+        );
+
+        normalizedMap.set(nameLower, {
+          name: item.normalizedName,
+          quantities: [item.totalQuantity],
+          original: [],
+          normalized: true,
+          totalQuantity: item.totalQuantity,
+          checked: false,
+          sources: uniqueSources.length > 0 ? uniqueSources : undefined,
+        });
+      });
+
+      const normalizedList = Array.from(normalizedMap.values());
+      console.log('Final normalized list:', normalizedList);
+      console.log('Sample item with sources:', normalizedList.find(i => i.sources && i.sources.length > 0));
       
       setGroceryList(normalizedList);
       setIsNormalized(true);
 
       // Step 5: Save to database
+      console.log('Saving to database...');
       await fetch('/api/grocery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,10 +304,13 @@ export default function GroceryPage() {
 
       // Reload to get IDs
       setTimeout(async () => {
+        console.log('Reloading from database...');
         const reloadResponse = await fetch('/api/grocery');
         if (reloadResponse.ok) {
           const { groceryList: dbList } = await reloadResponse.json();
-          setGroceryList(dbList);
+          console.log('Reloaded from DB:', dbList);
+          console.log('Sample DB item with sources:', dbList.find((i: any) => i.sources && i.sources.length > 0));
+          setGroceryList(Array.isArray(dbList) ? [...dbList] : []);
         }
       }, 100);
     } catch (error: any) {
@@ -240,7 +331,7 @@ export default function GroceryPage() {
       await fetch('/api/grocery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: updatedList, isNormalized }),
+        body: JSON.stringify({ groceryList: updatedList }),
       });
     } catch (error) {
       console.error('Error updating grocery item:', error);
@@ -257,7 +348,7 @@ export default function GroceryPage() {
       await fetch('/api/grocery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: [], isNormalized: false }),
+        body: JSON.stringify({ groceryList: [] }),
       });
     } catch (error) {
       console.error('Error clearing grocery list:', error);

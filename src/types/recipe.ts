@@ -53,6 +53,12 @@ export interface GroceryItem {
   normalized: boolean;
   totalQuantity?: string; // AI-calculated total
   checked?: boolean;
+  sources?: Array<{ // Track which recipes contributed this ingredient
+    recipeName: string;
+    recipeId: number;
+    quantity: string;
+    originalText: string;
+  }>;
 }
 
 export interface JsonLdRecipe {

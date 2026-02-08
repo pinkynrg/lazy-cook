@@ -25,6 +25,13 @@ export function parseIngredients(ingredientList: string[]): Ingredient[] {
         if (qbMatch) {
           name = qbMatch[1].trim();
           quantity = 'q.b.';
+        } else {
+          // Match count-based quantities without a known unit (e.g., "4 uova", "n. 2 zucchine")
+          const countMatch = ing.match(/^(?:n\.?\s*)?([\d.,\/]+)\s+(.+)$/i);
+          if (countMatch) {
+            quantity = countMatch[1].trim();
+            name = countMatch[2].trim();
+          }
         }
       }
     }
