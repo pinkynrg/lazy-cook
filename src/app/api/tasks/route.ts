@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
-      AND t.completedAt >= datetime('now', '-' || ? || ' days')
+      AND date(t.completedAt) >= date('now', '-' || ? || ' days')
       ORDER BY t.completedAt DESC
     `).all(session.householdId, days);
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
-      AND t.completedAt >= datetime('now', '-' || ? || ' days')
+      AND date(t.completedAt) >= date('now', '-' || ? || ' days')
       GROUP BY u.username, t.taskType
     `).all(session.householdId, days);
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { taskType } = await request.json();
+    const { taskType, completedAt, userId } = await request.json();
 
     if (!taskType || !['shopping', 'cooking', 'dishes'].includes(taskType)) {
       return NextResponse.json(
@@ -66,10 +66,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = db.prepare(`
-      INSERT INTO household_tasks (householdId, userId, taskType)
-      VALUES (?, ?, ?)
-    `).run(session.householdId, session.userId, taskType);
+    // Use specified userId or default to session userId
+    const taskUserId = userId || session.userId;
+
+    // If completedAt is provided (backdating), use it. Otherwise use current time
+    let result;
+    if (completedAt) {
+      // Backdate the task to a specific date
+      result = db.prepare(`
+        INSERT INTO household_tasks (householdId, userId, taskType, completedAt)
+        VALUES (?, ?, ?, datetime(?))
+      `).run(session.householdId, taskUserId, taskType, completedAt);
+    } else {
+      // Use current timestamp
+      result = db.prepare(`
+        INSERT INTO household_tasks (householdId, userId, taskType)
+        VALUES (?, ?, ?)
+      `).run(session.householdId, taskUserId, taskType);
+    }
 
     return NextResponse.json({ 
       success: true,
@@ -77,8 +91,50 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error logging task:', error);
+    
+    // Check for unique constraint violation
+    if (error.message && error.message.includes('UNIQUE constraint failed')) {
+      return NextResponse.json(
+        { error: 'Questo task è già stato registrato per questa data' },
+        { status: 409 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Errore nella registrazione del task' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE a task
+export async function DELETE(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { taskId } = await request.json();
+
+    if (!taskId) {
+      return NextResponse.json(
+        { error: 'taskId è richiesto' },
+        { status: 400 }
+      );
+    }
+
+    // Verify task belongs to the household before deleting
+    db.prepare(`
+      DELETE FROM household_tasks 
+      WHERE id = ? AND householdId = ?
+    `).run(taskId, session.householdId);
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting task:', error);
+    return NextResponse.json(
+      { error: 'Errore nella rimozione del task' },
       { status: 500 }
     );
   }

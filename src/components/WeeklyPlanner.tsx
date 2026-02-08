@@ -335,11 +335,17 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                         draggable
                         onDragStart={(e) => handleAssignmentDragStart(e, assignment.id)}
                       >
-                        {recipe.image && (
-                          <div className="recipe-card-mini-image">
-                            <img src={recipe.image} alt={recipe.name} />
-                          </div>
-                        )}
+                        <div className="recipe-card-mini-image">
+                          {recipe.image ? (
+                            <>
+                              <img src={recipe.image} alt={recipe.name} />
+                              <div className="recipe-card-image-overlay"></div>
+                              <span className="recipe-card-title-overlay">{recipe.name}</span>
+                            </>
+                          ) : (
+                            <span className="recipe-card-title-overlay">{recipe.name}</span>
+                          )}
+                        </div>
                         <div className="recipe-card-content">
                           {editingAssignmentId === assignment.id ? (
                             <div className="servings-edit" onClick={(e) => e.stopPropagation()}>
@@ -359,9 +365,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                               <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva">✓</button>
                               <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla">✕</button>
                             </div>
-                          ) : (
-                            <span className="recipe-card-title">{recipe.name}</span>
-                          )}
+                          ) : null}
                         </div>
                         <div className="recipe-card-actions">
                           {editingAssignmentId !== assignment.id && (

@@ -60,6 +60,36 @@ export default function RecipesPage() {
     }
   };
 
+  const updateRecipe = async (recipeId: number, updates: {
+    name?: string;
+    servings?: string;
+    instructions?: string;
+    prepTime?: string;
+    totalTime?: string;
+    image?: string;
+    ingredients?: string;
+  }) => {
+    try {
+      const response = await fetch('/api/recipes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: recipeId, ...updates }),
+      });
+
+      if (response.ok) {
+        await loadRecipesFromDb();
+        // Update the selectedRecipe to reflect changes
+        const updatedRecipes = await fetch('/api/recipes').then(r => r.json());
+        const updatedRecipe = updatedRecipes.find((r: Recipe) => r.id === recipeId);
+        if (updatedRecipe) {
+          setSelectedRecipe(updatedRecipe);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating recipe:', error);
+    }
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -111,7 +141,8 @@ export default function RecipesPage() {
         <RecipeModal
           recipe={selectedRecipe}
           onClose={() => setSelectedRecipe(null)}
-          onUpdateServings={() => {}}
+          onUpdateServings={(id, servings) => updateRecipe(id, { servings })}
+          onUpdateRecipe={updateRecipe}
         />
       )}
     </div>

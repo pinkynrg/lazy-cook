@@ -40,13 +40,18 @@ export default function RecipeCard({
       draggable={draggable}
       onDragStart={onDragStart}
     >
-      {recipe.image && (
-        <div className="recipe-card-mini-image">
-          <img src={recipe.image} alt={recipe.name} draggable="false" />
-        </div>
-      )}
+      <div className="recipe-card-mini-image">
+        {recipe.image ? (
+          <>
+            <img src={recipe.image} alt={recipe.name} draggable="false" />
+            <div className="recipe-card-image-overlay"></div>
+            <span className="recipe-card-title-overlay">{recipe.name}</span>
+          </>
+        ) : (
+          <span className="recipe-card-title-overlay">{recipe.name}</span>
+        )}
+      </div>
       <div className="recipe-card-content">
-        <span className="recipe-card-title">{recipe.name}</span>
         {showServings && assignment && (
           <>
             {editingServingsId === assignment.id ? (

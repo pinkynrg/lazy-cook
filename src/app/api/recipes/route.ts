@@ -108,3 +108,82 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+// PUT update recipe
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, name, servings, prepTime, totalTime, instructions, image, ingredients } = await request.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID ricetta richiesto' },
+        { status: 400 }
+      );
+    }
+
+    // Get current recipe
+    const recipe = db.prepare('SELECT * FROM recipes WHERE id = ? AND householdId = ?')
+      .get(id, session.householdId) as any;
+
+    if (!recipe) {
+      return NextResponse.json(
+        { error: 'Ricetta non trovata' },
+        { status: 404 }
+      );
+    }
+
+    const jsonld: JsonLdRecipe = JSON.parse(recipe.jsonldSource);
+    const currentOverrides: RecipeOverrides = recipe.userOverrides ? JSON.parse(recipe.userOverrides) : {};
+
+    // Update overrides with new values
+    const updatedOverrides: RecipeOverrides = {
+      ...currentOverrides,
+      ...(servings !== undefined && { servings }),
+      ...(instructions !== undefined && { instructions })
+    };
+
+    // Update JSON-LD with new values if provided
+    if (name !== undefined && name !== jsonld.name) {
+      jsonld.name = name;
+    }
+    if (prepTime !== undefined) {
+      jsonld.prepTime = prepTime || null;
+    }
+    if (totalTime !== undefined) {
+      jsonld.totalTime = totalTime || null;
+    }
+    if (image !== undefined) {
+      jsonld.image = image || null;
+    }
+    if (ingredients !== undefined) {
+      // Convert ingredients string (one per line) to recipeIngredient array
+      const ingredientLines = ingredients.split('\n').filter((line: string) => line.trim());
+      jsonld.recipeIngredient = ingredientLines;
+    }
+
+    // Update database
+    db.prepare(`
+      UPDATE recipes 
+      SET jsonldSource = ?, userOverrides = ?, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ? AND householdId = ?
+    `).run(
+      JSON.stringify(jsonld),
+      JSON.stringify(updatedOverrides),
+      id,
+      session.householdId
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating recipe:', error);
+    return NextResponse.json(
+      { error: 'Errore nell\'aggiornamento della ricetta' },
+      { status: 500 }
+    );
+  }
+}

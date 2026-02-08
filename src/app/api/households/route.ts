@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, getUserHouseholds } from '@/lib/auth';
+import db from '@/lib/db';
 
 // GET all households for current user
 export async function GET() {
@@ -11,7 +12,16 @@ export async function GET() {
 
     const households = getUserHouseholds(session.userId);
 
-    return NextResponse.json({ households });
+    // Also get members of the current active household
+    const members = db.prepare(`
+      SELECT u.id, u.username
+      FROM users u
+      JOIN user_households uh ON u.id = uh.userId
+      WHERE uh.householdId = ?
+      ORDER BY u.username
+    `).all(session.householdId);
+
+    return NextResponse.json({ households, members });
   } catch (error: any) {
     console.error('Error fetching households:', error);
     return NextResponse.json(
