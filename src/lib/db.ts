@@ -135,9 +135,11 @@ db.exec(`
     taskType TEXT NOT NULL,
     completedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (householdId) REFERENCES households(id) ON DELETE CASCADE,
-    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE(householdId, taskType, date(completedAt))
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_household_tasks_unique_date 
+    ON household_tasks(householdId, taskType, date(completedAt));
 
   CREATE INDEX IF NOT EXISTS idx_assignments_recipeId ON recipe_day_assignments(recipeId);
   CREATE INDEX IF NOT EXISTS idx_assignments_dayOfWeek ON recipe_day_assignments(dayOfWeek);
