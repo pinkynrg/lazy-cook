@@ -125,7 +125,7 @@ db.exec(`
     dayOfWeek INTEGER NOT NULL,
     mealType TEXT NOT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(dayOfWeek, mealType)
+    UNIQUE(dayOfWeek, mealType, householdId)
   );
 
   CREATE TABLE IF NOT EXISTS household_tasks (
@@ -342,6 +342,46 @@ try {
   try {
     db.exec(`ALTER TABLE eating_out_meals ADD COLUMN userId INTEGER REFERENCES users(id);`);
   } catch (e) {}
+
+  // Fix eating_out_meals unique constraint to include householdId
+  try {
+    // Check if the constraint needs fixing
+    const tableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='eating_out_meals'").get() as any;
+    if (tableInfo && tableInfo.sql && !tableInfo.sql.includes('UNIQUE(dayOfWeek, mealType, householdId)')) {
+      // Backup data
+      const existingData = db.prepare('SELECT * FROM eating_out_meals').all();
+      
+      // Drop and recreate table with correct constraint
+      db.exec('DROP TABLE IF EXISTS eating_out_meals');
+      db.exec(`
+        CREATE TABLE eating_out_meals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          dayOfWeek INTEGER NOT NULL,
+          mealType TEXT NOT NULL,
+          userId INTEGER REFERENCES users(id),
+          householdId INTEGER REFERENCES households(id),
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(dayOfWeek, mealType, householdId)
+        );
+        CREATE INDEX IF NOT EXISTS idx_eating_out_householdId ON eating_out_meals(householdId);
+      `);
+      
+      // Restore data
+      if (existingData.length > 0) {
+        const insert = db.prepare(`
+          INSERT INTO eating_out_meals (id, dayOfWeek, mealType, userId, householdId, createdAt)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        for (const row of existingData) {
+          insert.run(row.id, row.dayOfWeek, row.mealType, row.userId || null, row.householdId || null, row.createdAt);
+        }
+      }
+      
+      console.log('✅ Fixed eating_out_meals UNIQUE constraint to include householdId');
+    }
+  } catch (e: any) {
+    console.log('eating_out_meals constraint migration skipped or already done:', e.message);
+  }
 
 } catch (error) {
   console.error('Error running migrations:', error);

@@ -150,13 +150,14 @@ export async function POST(request: NextRequest) {
 
     // Restore eating out meals
     const insertEatingOut = db.prepare(
-      'INSERT INTO eating_out_meals (dayOfWeek, mealType, householdId) VALUES (?, ?, ?)'
+      'INSERT INTO eating_out_meals (dayOfWeek, mealType, userId, householdId) VALUES (?, ?, ?, ?)'
     );
 
     for (const meal of savedEatingOut) {
       insertEatingOut.run(
         meal.dayOfWeek,
         meal.mealType,
+        session.userId,
         session.householdId
       );
     }

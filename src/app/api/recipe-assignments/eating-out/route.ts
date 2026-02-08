@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
         'DELETE FROM recipe_day_assignments WHERE dayOfWeek = ? AND mealType = ? AND householdId = ?'
       ).run(dayOfWeek, mealType, session.householdId);
       
-      // Insert eating out record
+      // Insert eating out record with userId and householdId
       db.prepare(
-        'INSERT OR IGNORE INTO eating_out_meals (dayOfWeek, mealType, householdId) VALUES (?, ?, ?)'
-      ).run(dayOfWeek, mealType, session.householdId);
+        'INSERT OR IGNORE INTO eating_out_meals (dayOfWeek, mealType, userId, householdId) VALUES (?, ?, ?, ?)'
+      ).run(dayOfWeek, mealType, session.userId, session.householdId);
     } else {
       // Remove the eating out record
       db.prepare(
