@@ -28,6 +28,39 @@ export default function GroceryPage() {
     return quantity;
   };
 
+  const parseServings = (servingsStr: string | null | undefined): number | null => {
+    if (!servingsStr) return null;
+    
+    // Remove common words
+    const cleaned = servingsStr.toLowerCase()
+      .replace(/porzioni|persone|people|servings?/gi, '')
+      .trim();
+    
+    // Handle fractions like "2 / 4" or "2/4" - take the smaller number (min servings)
+    const fractionMatch = cleaned.match(/(\d+(?:[.,]\d+)?)\s*\/\s*(\d+(?:[.,]\d+)?)/);
+    if (fractionMatch) {
+      const num1 = parseFloat(fractionMatch[1].replace(',', '.'));
+      const num2 = parseFloat(fractionMatch[2].replace(',', '.'));
+      return Math.min(num1, num2);
+    }
+    
+    // Handle ranges like "2-4" or "2 - 4" - take the smaller number (min servings)
+    const rangeMatch = cleaned.match(/(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)/);
+    if (rangeMatch) {
+      const num1 = parseFloat(rangeMatch[1].replace(',', '.'));
+      const num2 = parseFloat(rangeMatch[2].replace(',', '.'));
+      return Math.min(num1, num2);
+    }
+    
+    // Simple number
+    const simpleMatch = cleaned.match(/(\d+(?:[.,]\d+)?)/);
+    if (simpleMatch) {
+      return parseFloat(simpleMatch[1].replace(',', '.'));
+    }
+    
+    return null;
+  };
+
   const loadGroceryListFromDb = async () => {
     try {
       const response = await fetch('/api/grocery');
@@ -96,7 +129,7 @@ export default function GroceryPage() {
         }
 
         // Get base servings from recipe
-        const baseServings = recipe.servings ? parseFloat(recipe.servings) : null;
+        const baseServings = parseServings(recipe.servings);
         const plannedServings = assignment.plannedServings || baseServings || 1;
 
         // Calculate scaling ratio
