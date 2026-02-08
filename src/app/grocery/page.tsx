@@ -214,8 +214,16 @@ export default function GroceryPage() {
       const ingredientsList: Array<{ text: string; sources: any[] }> = [];
       consolidatedList.forEach(item => {
         item.quantities.forEach(qty => {
+          const qtyText = (qty ?? '').toString().trim();
+          const nameText = (item.name ?? '').toString().trim();
+          // Help the LLM parse quantities: prefer "<qty> <name>" for numeric quantities (e.g. "5 uova")
+          const looksNumericFirst = /^\d/.test(qtyText);
+          const text = qtyText
+            ? (looksNumericFirst ? `${qtyText} ${nameText}`.trim() : `${nameText} ${qtyText}`.trim())
+            : nameText;
+
           ingredientsList.push({
-            text: `${item.name} ${qty}`.trim(),
+            text,
             sources: item.sources || []
           });
         });
@@ -241,6 +249,29 @@ export default function GroceryPage() {
 
       // Step 4: Build final grocery list from AI results
       // Keep track of all sources from the consolidated list
+      const tokenizeForMatch = (text: string): string[] => {
+        const cleaned = text
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[’']/g, ' ')
+          .replace(/[^a-z0-9\s]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const stopwords = new Set(['di', 'd', 'del', 'dello', 'della', 'dei', 'degli', 'delle', 'al', 'allo', 'alla', 'ai', 'alle', 'da', 'in', 'con', 'e']);
+        return cleaned
+          .split(' ')
+          .filter(Boolean)
+          .filter(t => !stopwords.has(t));
+      };
+
+      const isSubset = (needles: string[], haystack: string[]): boolean => {
+        if (needles.length === 0) return false;
+        const hay = new Set(haystack);
+        return needles.every(t => hay.has(t));
+      };
+
       const allSourcesByIngredient = new Map<string, any[]>();
       consolidatedList.forEach(item => {
         if (item.sources && item.sources.length > 0) {
@@ -262,11 +293,24 @@ export default function GroceryPage() {
         
         // Try to find sources by matching ingredient names
         const foundSources: any[] = [];
+        const normalizedTokens = tokenizeForMatch(item.normalizedName);
         
         // Check all original items for matches
         for (const [originalName, sources] of allSourcesByIngredient.entries()) {
-          // Match if either name contains the other (fuzzy matching)
+          // Match if either name contains the other (fast path)
           if (nameLower.includes(originalName) || originalName.includes(nameLower)) {
+            foundSources.push(...sources);
+            continue;
+          }
+
+          // Token-based match (handles inserted adjectives like "extravergine")
+          const originalTokens = tokenizeForMatch(originalName);
+          const tokenMatch =
+            (normalizedTokens.length >= 2 && isSubset(normalizedTokens, originalTokens)) ||
+            (originalTokens.length >= 2 && isSubset(originalTokens, normalizedTokens)) ||
+            (normalizedTokens.length === 1 && originalTokens[0] === normalizedTokens[0]);
+
+          if (tokenMatch) {
             foundSources.push(...sources);
           }
         }

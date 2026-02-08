@@ -28,45 +28,81 @@ export async function POST(request: NextRequest) {
 Ingredienti da analizzare:
 ${ingredients.map((ing: string, i: number) => `${i + 1}. ${ing}`).join('\n')}
 
-REGOLE DI NORMALIZZAZIONE (molto importante per la spesa):
+  REGOLE DI NORMALIZZAZIONE (molto importante per la spesa):
 1. Raggruppa varianti dello stesso ingrediente base:
    - "Pomodori rossi", "Pomodorini", "Pomodori pelati", "Pomodori ciliegino" → "Pomodori"
    - "Olio extravergine d'oliva", "Olio d'oliva", "Olio EVO" → "Olio d'oliva"
    - "Sale fino", "Sale grosso" → "Sale"
    - "Aglio 1 spicchio", "Aglio 2 spicchi" → "Aglio"
+    - SINGOLARE/PLURALE: "uovo" e "uova" → "Uova" (UNA SOLA RIGA)
+    - SINGOLARE/PLURALE: "pomodoro" e "pomodori" → "Pomodori" (UNA SOLA RIGA)
+    - In generale, preferisci il nome più naturale per la spesa (spesso il plurale): es. "Uova", "Pomodori", "Zucchine".
    
 2. Mantieni separati ingredienti REALMENTE diversi:
    - "Petto di pollo" ≠ "Cosce di pollo" (tagli diversi)
    - "Yogurt greco" ≠ "Yogurt magro" (prodotti diversi)
    
-3. Somma le quantità per ingredienti normalizzati:
-   - Converti unità se necessario (1 kg + 500 g → 1500 g o 1.5 kg)
-   - "q.b." (quanto basta) rimane "q.b." e non si somma
-   - Se ci sono numeri E "q.b.", mostra "XXX g + q.b."
+3. UNICITÀ: ogni normalizedName deve comparire UNA sola volta nell'output.
+  - Se stai per emettere due righe con lo stesso normalizedName, DEVI fonderle.
+  - Usa nomi coerenti (maiuscole/minuscole, singolare/plurale) e standard da lista della spesa.
+  - Se hai due nomi molto simili che differiscono solo per singolare/plurale (es. "Uovo"/"Uova"), DEVI scegliere un solo nome canonico e fonderli.
 
-Rispondi SOLO con un JSON array dove ogni elemento ha:
+4. Somma le quantità per ingredienti normalizzati, ma NON fare assunzioni sbagliate:
+  - Converti SOLO tra unità compatibili di peso/volume (kg↔g, l↔ml, ecc.).
+  - NON convertire "pezzi"/"uova"/"spicchi" in grammi e viceversa.
+  - Se per lo stesso ingrediente hai unità diverse NON convertibili, mantienile separate nel totale usando "+".
+    Esempio: "132.5 g + 7.5 uova".
+  - "q.b." (quanto basta) rimane "q.b." e non si somma.
+  - Se ci sono numeri E "q.b.", mostra "<totale> + q.b.".
+
+   - IMPORTANTE: non lasciare mai un totale senza unità se puoi evitarlo.
+     Esempio sbagliato: "5 + 2.5".
+     Esempio corretto: "8 uova" oppure "7.5 uova".
+
+5. Ingredienti contabili (count-based): se vedi quantità senza unità (es. "4 uova") considera l'unità implicita.
+  - Esempi: "uova" → "uova", "limoni" → "pz", "spicchi" → "spicchi".
+  - Se l'unità non è chiara, lascia la quantità come numero senza unità.
+
+6. ARROTONDAMENTI PER LA SPESA:
+  - Per ingredienti contabili (uova, pz, spicchi, bustine, ecc.) arrotonda SEMPRE per eccesso all'intero (ceiling).
+    Esempio: 7.5 uova → "8 uova".
+
+7. REGOLA SPECIALE UOVA (per normalizzare meglio):
+  - "uovo" e "uova" devono diventare SEMPRE "Uova".
+  - Se trovi quantità di Uova in grammi (es. "85 g uova"), puoi convertirle in numero di uova assumendo 1 uovo ≈ 60 g,
+    poi sommare con le altre uova e arrotondare per eccesso.
+    Esempio: 127.5 g uova ≈ 2.125 uova → 3 uova (prima dell'arrotondamento finale).
+
+FORMATO RISPOSTA (obbligatorio):
+Rispondi SOLO con un oggetto JSON con una singola proprietà "normalized".
+{"normalized": [ ... ]}
+
+Ogni elemento dell'array deve avere:
 {
   "normalizedName": "nome normalizzato per la spesa",
-  "totalQuantity": "quantità totale calcolata",
-  "count": numero di volte che appare
+  "totalQuantity": "quantità totale calcolata (può contenere ' + ' per unità diverse)",
+  "count": numero di occorrenze input raggruppate
 }
 
 Esempio:
-Input: ["Pomodori rossi 200 g", "Pomodorini ciliegino 150 g", "Sale fino q.b.", "Sale grosso q.b.", "Olio EVO 30 g", "Olio extravergine d'oliva q.b."]
-Output: [
-  {"normalizedName": "Pomodori", "totalQuantity": "350 g", "count": 2},
-  {"normalizedName": "Sale", "totalQuantity": "q.b.", "count": 2},
-  {"normalizedName": "Olio d'oliva", "totalQuantity": "30 g + q.b.", "count": 2}
-]
+Input: ["Pomodori rossi 200 g", "Pomodorini ciliegino 150 g", "Sale fino q.b.", "Sale grosso q.b.", "Olio EVO 30 g", "Olio extravergine d'oliva q.b.", "Uova 2", "3 uova"]
+Output: {
+  "normalized": [
+    {"normalizedName": "Pomodori", "totalQuantity": "350 g", "count": 2},
+    {"normalizedName": "Sale", "totalQuantity": "q.b.", "count": 2},
+    {"normalizedName": "Olio d'oliva", "totalQuantity": "30 g + q.b.", "count": 2},
+    {"normalizedName": "Uova", "totalQuantity": "5 uova", "count": 2}
+  ]
+}
 
-Rispondi solo con il JSON array, nient'altro.`;
+Rispondi solo con l'oggetto JSON, nient'altro.`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'Sei un assistente culinario che normalizza ingredienti e calcola totali. Rispondi solo con JSON valido, niente altro testo.'
+          content: 'Sei un assistente per la lista della spesa. Devi normalizzare ingredienti, sommare quantità in modo conservativo (senza conversioni improprie) e rispondere solo con JSON valido nel formato richiesto.'
         },
         {
           role: 'user',
@@ -118,10 +154,11 @@ Rispondi solo con il JSON array, nient'altro.`;
     }
 
     return NextResponse.json({ normalized });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error normalizing ingredients:', error);
+    const message = error instanceof Error ? error.message : 'Errore durante la normalizzazione';
     return NextResponse.json(
-      { error: error.message || 'Errore durante la normalizzazione' },
+      { error: message },
       { status: 500 }
     );
   }

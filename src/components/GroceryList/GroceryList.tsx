@@ -16,48 +16,6 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
   const [normalizing, setNormalizing] = useState(false);
   const [inspectingItem, setInspectingItem] = useState<GroceryItem | null>(null);
 
-  const formatTotalsFromSources = (item: GroceryItem): string | null => {
-    if (!Array.isArray(item.sources) || item.sources.length === 0) return null;
-
-    const totalsByUnit = new Map<string, number>();
-    let hasAnyNumeric = false;
-
-    for (const source of item.sources) {
-      const raw = (source.quantity ?? '').toString().trim();
-      if (!raw || raw.toLowerCase() === 'q.b.' || raw.toLowerCase() === 'qb') continue;
-
-      const normalized = raw.replace(',', '.').trim();
-      const match = normalized.match(/^([0-9]+(?:\.[0-9]+)?)\s*(.*)$/);
-      if (!match) continue;
-
-      const value = Number(match[1]);
-      if (!Number.isFinite(value)) continue;
-
-      hasAnyNumeric = true;
-      const unit = (match[2] || '').trim().toLowerCase();
-      totalsByUnit.set(unit, (totalsByUnit.get(unit) ?? 0) + value);
-    }
-
-    if (!hasAnyNumeric) return null;
-
-    const parts: string[] = [];
-    for (const [unit, total] of totalsByUnit.entries()) {
-      const rounded = Math.round(total * 10) / 10;
-      const text = Number.isInteger(rounded) ? String(rounded) : String(rounded);
-      parts.push(unit ? `${text} ${unit}` : text);
-    }
-
-    // Put unitless totals last for readability
-    parts.sort((a, b) => {
-      const aHasUnit = /\s/.test(a);
-      const bHasUnit = /\s/.test(b);
-      if (aHasUnit === bHasUnit) return a.localeCompare(b);
-      return aHasUnit ? -1 : 1;
-    });
-
-    return parts.join(' + ');
-  };
-
   const handleNormalize = async () => {
     setNormalizing(true);
     try {
@@ -144,8 +102,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
           <div className="grocery-list">
             {groceryList.map((item, index) => {
               // Prefer totals computed from per-recipe sources (handles mixed units); fallback to AI/quantities
-              const sourceTotals = formatTotalsFromSources(item);
-              const quantityText = sourceTotals || item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
+              const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
               const hasSources = Array.isArray(item.sources) && item.sources.length > 0;
               return (
                 <div 
@@ -227,7 +184,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
             </div>
             <div className="modal-body">
               <div className="ingredient-total">
-                <strong>Totale:</strong> {formatTotalsFromSources(inspectingItem) || inspectingItem.totalQuantity || inspectingItem.quantities.join(' + ')}
+                <strong>Totale:</strong> {inspectingItem.totalQuantity || inspectingItem.quantities.join(' + ') || 'q.b.'}
               </div>
               <div className="ingredient-sources">
                 <h4>Usato in:</h4>
