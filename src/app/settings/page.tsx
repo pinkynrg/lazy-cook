@@ -6,6 +6,10 @@ import type { Settings } from '@/types/recipe';
 import styles from './page.module.scss';
 
 export default function SettingsPage() {
+  const [nickname, setNickname] = useState('');
+  const [nicknameSaving, setNicknameSaving] = useState(false);
+  const [nicknameSaved, setNicknameSaved] = useState(false);
+
   const [familySize, setFamilySize] = useState(2);
   const [enableBreakfast, setEnableBreakfast] = useState(false);
   const [enableLunch, setEnableLunch] = useState(true);
@@ -21,7 +25,42 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadSettings();
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    try {
+      const res = await fetch('/api/profile');
+      if (!res.ok) return;
+      const data = await res.json();
+      const nick = data?.user?.nickname;
+      setNickname(typeof nick === 'string' ? nick : '');
+    } catch {
+      // ignore
+    }
+  };
+
+  const saveNickname = async () => {
+    setNicknameSaving(true);
+    setNicknameSaved(false);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname }),
+      });
+      if (res.ok) {
+        setNicknameSaved(true);
+        // In case backend trims
+        const data = await res.json().catch(() => null);
+        const saved = data?.nickname;
+        setNickname(typeof saved === 'string' ? saved : '');
+      }
+    } finally {
+      setNicknameSaving(false);
+      window.setTimeout(() => setNicknameSaved(false), 1500);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -100,6 +139,36 @@ export default function SettingsPage() {
 
       <div className={`page-content ${styles.pageContentPad}`}>
         <div className="settings-grid">
+          <div className="setting-card full-width">
+            <div className="setting-header">
+              <i className="bi bi-person-badge-fill"></i>
+              <h3>Profilo</h3>
+            </div>
+            <div className="setting-body">
+              <p className="setting-description">
+                Imposta un nickname (facoltativo) che verrà mostrato al posto dell’email nelle liste e nei task.
+              </p>
+
+              <div className={styles.nicknameRow}>
+                <input
+                  className={styles.nicknameInput}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Es. Fra"
+                  maxLength={32}
+                />
+                <button
+                  className="btn btn-outline"
+                  onClick={saveNickname}
+                  disabled={nicknameSaving}
+                >
+                  {nicknameSaving ? 'Salvataggio…' : (nicknameSaved ? 'Salvato' : 'Salva')}
+                </button>
+              </div>
+              <div className={styles.nicknameHint}>Lascia vuoto per usare l’email.</div>
+            </div>
+          </div>
+
           <div className="setting-card">
             <div className="setting-header">
               <i className="bi bi-people-fill"></i>

@@ -14,11 +14,15 @@ export async function GET() {
 
     // Also get members of the current active household
     const members = db.prepare(`
-      SELECT u.id, u.username
+      SELECT
+        u.id,
+        u.username,
+        u.nickname,
+        COALESCE(NULLIF(TRIM(u.nickname), ''), u.username) as displayName
       FROM users u
       JOIN user_households uh ON u.id = uh.userId
       WHERE uh.householdId = ?
-      ORDER BY u.username
+      ORDER BY displayName
     `).all(session.householdId);
 
     return NextResponse.json({ households, members });

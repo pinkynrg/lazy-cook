@@ -1,6 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Select, {
+  components,
+  type MultiValue,
+  type ValueContainerProps,
+  type MultiValueProps,
+} from 'react-select';
 import type { Settings } from '@/types/recipe';
 import styles from './FamilyTasksTable.module.scss';
 
@@ -18,7 +24,35 @@ type TaskSlot = {
 type HouseholdMember = {
   id: number;
   username: string;
+  nickname?: string | null;
+  displayName?: string;
 };
+
+type MemberOption = {
+  value: number;
+  label: string;
+};
+
+function CompactValueContainer(props: ValueContainerProps<MemberOption, true>) {
+  const values = props.getValue();
+  const title = values.map(v => v.label).join(', ');
+  const summary = title;
+
+  return (
+    <components.ValueContainer {...props}>
+      {values.length > 0 && (
+        <div className={styles.valueSummary} title={title}>
+          {summary}
+        </div>
+      )}
+      {props.children}
+    </components.ValueContainer>
+  );
+}
+
+function HiddenMultiValue(_props: MultiValueProps<MemberOption>) {
+  return null;
+}
 
 type TaskRow = {
   id: number;
@@ -27,6 +61,7 @@ type TaskRow = {
   dateStr: string;
   userId: number;
   username: string;
+  displayName?: string;
 };
 
 type TotalsResponse = {
@@ -129,6 +164,14 @@ export default function FamilyTasksTable() {
 
   const slots = useMemo(() => buildSlots(settings), [settings]);
 
+  const memberOptions = useMemo<MemberOption[]>(() => {
+    return members.map(m => ({ value: m.id, label: m.displayName || m.nickname || m.username }));
+  }, [members]);
+
+  const memberOptionById = useMemo(() => {
+    return new Map(memberOptions.map(o => [o.value, o] as const));
+  }, [memberOptions]);
+
   const range = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -149,9 +192,17 @@ export default function FamilyTasksTable() {
   }, [range.from, range.days]);
 
   const tasksByCell = useMemo(() => {
-    const map = new Map<string, TaskRow>();
+    const map = new Map<string, TaskRow[]>();
     for (const t of tasks) {
-      map.set(`${t.dateStr}-${t.taskType}`, t);
+      const key = `${t.dateStr}-${t.taskType}`;
+      const arr = map.get(key);
+      if (arr) arr.push(t);
+      else map.set(key, [t]);
+    }
+    // Keep deterministic order within each cell
+    for (const [key, arr] of map) {
+      arr.sort((a, b) => (a.displayName || a.username).localeCompare((b.displayName || b.username), 'it'));
+      map.set(key, arr);
     }
     return map;
   }, [tasks]);
@@ -175,7 +226,8 @@ export default function FamilyTasksTable() {
 
     // Ensure each household member is present, even if 0
     for (const m of members) {
-      if (!map.has(m.id)) map.set(m.id, { userId: m.id, username: m.username, cookAll: 0, cleanAll: 0 });
+      const name = m.displayName || m.nickname || m.username;
+      if (!map.has(m.id)) map.set(m.id, { userId: m.id, username: name, cookAll: 0, cleanAll: 0 });
     }
 
     return Array.from(map.values()).sort((a, b) => (b.cookAll + b.cleanAll) - (a.cookAll + a.cleanAll));
@@ -233,27 +285,19 @@ export default function FamilyTasksTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset]);
 
-  const upsertCell = async (dateStr: string, taskType: string, userId: number | null) => {
+  const setCellParticipants = async (dateStr: string, taskType: string, userIds: number[]) => {
     const cellKey = `${dateStr}-${taskType}`;
     setSavingCell(cellKey);
     setError(null);
     try {
-      if (userId === null) {
-        await fetch('/api/tasks', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dateStr, taskType }),
-        });
-      } else {
-        const res = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskType, completedAt: dateStr, userId }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data?.error || 'Errore nel salvataggio');
-        }
+      const res = await fetch('/api/tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dateStr, taskType, userIds }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Errore nel salvataggio');
       }
       await loadTasks();
     } catch (e: unknown) {
@@ -261,6 +305,40 @@ export default function FamilyTasksTable() {
     } finally {
       setSavingCell(null);
     }
+  };
+
+  const renderCellSelect = (dateStr: string, taskType: string, rows: TaskRow[]) => {
+    const cellKey = `${dateStr}-${taskType}`;
+    const isSaving = savingCell === cellKey;
+
+    const uniqueIds = Array.from(new Set(rows.map(r => r.userId)));
+    const value = uniqueIds
+      .map(id => memberOptionById.get(id) || {
+        value: id,
+        label: rows.find(r => r.userId === id)?.displayName || rows.find(r => r.userId === id)?.username || String(id)
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, 'it'));
+
+    return (
+      <Select<MemberOption, true>
+        className={styles.multiSelect}
+        classNamePrefix="taskSelect"
+        isMulti
+        isClearable
+        isDisabled={loading || isSaving}
+        options={memberOptions}
+        value={value}
+        placeholder="—"
+        noOptionsMessage={() => 'Nessun membro'}
+        menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+        menuPosition="fixed"
+        components={{ ValueContainer: CompactValueContainer, MultiValue: HiddenMultiValue }}
+        onChange={(newValue: MultiValue<MemberOption>) => {
+          const ids = (newValue || []).map(v => v.value);
+          void setCellParticipants(dateStr, taskType, ids);
+        }}
+      />
+    );
   };
 
   const renderDesktopTable = () => {
@@ -272,7 +350,7 @@ export default function FamilyTasksTable() {
               <th className={styles.stickyCol}>Data</th>
               {slots.map(slot => {
                 return (
-                  <th key={slot.key}>
+                  <th key={slot.key} className={styles.slotCol}>
                     <div className={styles.colHeader}>
                       <div className={styles.colTitle}>{slot.label}</div>
                     </div>
@@ -292,29 +370,13 @@ export default function FamilyTasksTable() {
                 </td>
                 {slots.map(slot => {
                   const cellKey = `${dateStr}-${slot.key}`;
-                  const row = tasksByCell.get(cellKey);
-                  const value = row?.userId ? String(row.userId) : '';
-                  const isSaving = savingCell === cellKey;
+                  const rows = tasksByCell.get(cellKey) ?? [];
                   return (
-                    <td key={slot.key} className={row ? styles.filledCell : styles.emptyCell}>
-                      <select
-                        className={styles.select}
-                        value={value}
-                        disabled={loading || isSaving}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (!v) {
-                            void upsertCell(dateStr, slot.key, null);
-                          } else {
-                            void upsertCell(dateStr, slot.key, Number(v));
-                          }
-                        }}
-                      >
-                        <option value="">—</option>
-                        {members.map(m => (
-                          <option key={m.id} value={String(m.id)}>{m.username}</option>
-                        ))}
-                      </select>
+                    <td
+                      key={slot.key}
+                      className={`${styles.slotCol} ${rows.length > 0 ? styles.filledCell : styles.emptyCell}`}
+                    >
+                      {renderCellSelect(dateStr, slot.key, rows)}
                     </td>
                   );
                 })}
@@ -340,30 +402,11 @@ export default function FamilyTasksTable() {
             <div className={styles.dayBody}>
               {slots.map(slot => {
                 const cellKey = `${dateStr}-${slot.key}`;
-                const row = tasksByCell.get(cellKey);
-                const value = row?.userId ? String(row.userId) : '';
-                const isSaving = savingCell === cellKey;
+                const rows = tasksByCell.get(cellKey) ?? [];
                 return (
                   <div key={slot.key} className={styles.mobileRow}>
                     <div className={styles.mobileLabel}>{slot.label}</div>
-                    <select
-                      className={styles.select}
-                      value={value}
-                      disabled={loading || isSaving}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (!v) {
-                          void upsertCell(dateStr, slot.key, null);
-                        } else {
-                          void upsertCell(dateStr, slot.key, Number(v));
-                        }
-                      }}
-                    >
-                      <option value="">—</option>
-                      {members.map(m => (
-                        <option key={m.id} value={String(m.id)}>{m.username}</option>
-                      ))}
-                    </select>
+                    {renderCellSelect(dateStr, slot.key, rows)}
                   </div>
                 );
               })}

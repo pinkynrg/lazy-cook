@@ -244,6 +244,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
   min-width: 760px;
 
   th,
@@ -263,6 +264,11 @@
   }
 }
 
+.slotCol {
+  width: var(--task-slot-col-width, 220px);
+  max-width: var(--task-slot-col-width, 220px);
+}
+
 .stickyCol {
   position: sticky;
   left: 0;
@@ -270,6 +276,8 @@
   background: white;
   border-right: 1px solid #eef2f7;
   min-width: 170px;
+  width: 170px;
+  max-width: 170px;
 }
 
 .colHeader {
@@ -317,6 +325,163 @@
   background: white;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.multiSelect {
+  width: 100%;
+  font-size: 0.92rem;
+}
+
+.multiSelect :global(.taskSelect__control) {
+  border-radius: 10px;
+  border-color: var(--border);
+  min-height: 38px;
+  box-shadow: none;
+  min-width: 0;
+}
+
+.multiSelect :global(.taskSelect__control:hover) {
+  border-color: #cbd5e1;
+}
+
+.multiSelect :global(.taskSelect__value-container) {
+  padding: 2px 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.valueSummary {
+  flex: 1;
+  font-weight: 800;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.multiSelect :global(.taskSelect__multi-value) {
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.multiSelect :global(.taskSelect__multi-value__label) {
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.multiSelect :global(.taskSelect__multi-value__remove) {
+  cursor: pointer;
+}
+
+.multiSelect :global(.taskSelect__indicator-separator) {
+  display: none;
+}
+
+.multiSelect :global(.taskSelect__input-container) {
+  margin: 0;
+  padding: 0;
+}
+
+.multiSelect :global(.taskSelect__input) {
+  margin: 0;
+  padding: 0;
+}
+
+.multiSelect :global(.taskSelect__menu) {
+  z-index: 10000;
+}
+
+.multiSelect :global(.taskSelect__menu-portal) {
+  z-index: 10000;
+}
+
+.cellBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobileCell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+}
+
+.none {
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  max-width: 100%;
+}
+
+.chipText {
+  font-weight: 800;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.chipRemove {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: var(--text-secondary);
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.cellActions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.clearMini {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .filledCell {
@@ -375,7 +540,7 @@
 
 .mobileRow {
   display: grid;
-  grid-template-columns: 1fr 140px;
+  grid-template-columns: 1fr;
   gap: 10px;
   align-items: center;
 }

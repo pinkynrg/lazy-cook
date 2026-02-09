@@ -90,7 +90,9 @@ export async function GET(request: NextRequest) {
         t.completedAt,
         date(t.completedAt) as dateStr,
         t.userId,
-        u.username
+        u.username,
+        u.nickname,
+        COALESCE(NULLIF(TRIM(u.nickname), ''), u.username) as displayName
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
@@ -126,7 +128,11 @@ export async function GET(request: NextRequest) {
     `).all(session.householdId) as any[];
 
     const totalsByUserRange = db.prepare(`
-      SELECT userId, u.username as username, COUNT(*) as count
+      SELECT userId,
+        u.username as username,
+        u.nickname as nickname,
+        COALESCE(NULLIF(TRIM(u.nickname), ''), u.username) as displayName,
+        COUNT(*) as count
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
@@ -137,7 +143,12 @@ export async function GET(request: NextRequest) {
     `).all(session.householdId, fromDate, toDate) as any[];
 
     const totalsByUserTaskTypeRange = db.prepare(`
-      SELECT t.userId as userId, u.username as username, t.taskType as taskType, COUNT(*) as count
+      SELECT t.userId as userId,
+        u.username as username,
+        u.nickname as nickname,
+        COALESCE(NULLIF(TRIM(u.nickname), ''), u.username) as displayName,
+        t.taskType as taskType,
+        COUNT(*) as count
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
@@ -147,7 +158,11 @@ export async function GET(request: NextRequest) {
     `).all(session.householdId, fromDate, toDate) as any[];
 
     const totalsByUserAll = db.prepare(`
-      SELECT userId, u.username as username, COUNT(*) as count
+      SELECT userId,
+        u.username as username,
+        u.nickname as nickname,
+        COALESCE(NULLIF(TRIM(u.nickname), ''), u.username) as displayName,
+        COUNT(*) as count
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
@@ -156,7 +171,12 @@ export async function GET(request: NextRequest) {
     `).all(session.householdId) as any[];
 
     const totalsByUserTaskTypeAll = db.prepare(`
-      SELECT t.userId as userId, u.username as username, t.taskType as taskType, COUNT(*) as count
+      SELECT t.userId as userId,
+        u.username as username,
+        u.nickname as nickname,
+        COALESCE(NULLIF(TRIM(u.nickname), ''), u.username) as displayName,
+        t.taskType as taskType,
+        COUNT(*) as count
       FROM household_tasks t
       JOIN users u ON t.userId = u.id
       WHERE t.householdId = ?
@@ -175,7 +195,7 @@ export async function GET(request: NextRequest) {
     const normalizeUserTaskType = (rows: any[]) => {
       return rows.map(r => ({
         userId: Number(r.userId),
-        username: String(r.username),
+        username: String(r.displayName || r.username),
         taskType: normalizeTaskType(String(r.taskType), settingsRow),
         count: Number(r.count || 0)
       }));
@@ -234,17 +254,8 @@ export async function POST(request: NextRequest) {
 
     const dateToUse = completedAt && isIsoDate(completedAt) ? completedAt : null;
 
-    // Because we have a UNIQUE index on (householdId, taskType, date(completedAt))
-    // and it uses an expression, we upsert by deleting the existing row for that date/type.
     const tx = db.transaction(() => {
       if (dateToUse) {
-        db.prepare(`
-          DELETE FROM household_tasks
-          WHERE householdId = ?
-          AND taskType = ?
-          AND date(completedAt) = date(?)
-        `).run(session.householdId, normalizedTaskType, dateToUse);
-
         const res = db.prepare(`
           INSERT INTO household_tasks (householdId, userId, taskType, completedAt)
           VALUES (?, ?, ?, datetime(?))
@@ -283,6 +294,63 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PUT replace participants for a given date/taskType
+export async function PUT(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { dateStr, taskType, userIds } = await request.json();
+
+    if (!dateStr || !isIsoDate(String(dateStr))) {
+      return NextResponse.json({ error: 'dateStr non valido' }, { status: 400 });
+    }
+
+    const settingsRow = db.prepare('SELECT * FROM settings WHERE householdId = ?').get(session.householdId) as any;
+    const normalizedTaskType = normalizeTaskType(String(taskType), settingsRow);
+    if (!normalizedTaskType || !isAllowedTaskType(normalizedTaskType)) {
+      return NextResponse.json({ error: 'taskType non valido' }, { status: 400 });
+    }
+
+    const ids: number[] = Array.isArray(userIds)
+      ? userIds.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n) && n > 0)
+      : [];
+
+    const uniqueIds = Array.from(new Set(ids));
+
+    const tx = db.transaction(() => {
+      db.prepare(`
+        DELETE FROM household_tasks
+        WHERE householdId = ?
+        AND taskType = ?
+        AND date(completedAt) = date(?)
+      `).run(session.householdId, normalizedTaskType, dateStr);
+
+      if (uniqueIds.length === 0) return;
+
+      const insert = db.prepare(`
+        INSERT INTO household_tasks (householdId, userId, taskType, completedAt)
+        VALUES (?, ?, ?, datetime(?))
+      `);
+
+      for (const uid of uniqueIds) {
+        insert.run(session.householdId, uid, normalizedTaskType, dateStr);
+      }
+    });
+
+    tx();
+    return NextResponse.json({ ok: true });
+  } catch (error: any) {
+    console.error('Error updating task participants:', error);
+    return NextResponse.json(
+      { error: 'Errore nel salvataggio' },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE a task
 export async function DELETE(request: NextRequest) {
   const session = await getSession();
@@ -295,6 +363,7 @@ export async function DELETE(request: NextRequest) {
     const taskId = body?.taskId;
     const dateStr = body?.dateStr;
     const taskType = body?.taskType;
+    const userId = body?.userId;
     const from = body?.from;
     const to = body?.to;
     const taskTypes = body?.taskTypes as string[] | undefined;
@@ -311,12 +380,22 @@ export async function DELETE(request: NextRequest) {
 
     if (dateStr && taskType && isIsoDate(dateStr)) {
       const normalizedTaskType = normalizeTaskType(taskType, settingsRow);
-      db.prepare(`
-        DELETE FROM household_tasks
-        WHERE householdId = ?
-        AND taskType = ?
-        AND date(completedAt) = date(?)
-      `).run(session.householdId, normalizedTaskType, dateStr);
+      if (userId) {
+        db.prepare(`
+          DELETE FROM household_tasks
+          WHERE householdId = ?
+          AND taskType = ?
+          AND date(completedAt) = date(?)
+          AND userId = ?
+        `).run(session.householdId, normalizedTaskType, dateStr, Number(userId));
+      } else {
+        db.prepare(`
+          DELETE FROM household_tasks
+          WHERE householdId = ?
+          AND taskType = ?
+          AND date(completedAt) = date(?)
+        `).run(session.householdId, normalizedTaskType, dateStr);
+      }
       return NextResponse.json({ success: true });
     }
 

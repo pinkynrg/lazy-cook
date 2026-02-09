@@ -35,8 +35,35 @@
   padding: 24px;
 }
 
+.nicknameRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.nicknameInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.nicknameHint {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 480px) {
   .pageContentPad {
     padding: 12px;
+  }
+
+  .nicknameRow {
+    grid-template-columns: 1fr;
   }
 }

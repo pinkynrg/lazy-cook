@@ -148,6 +148,14 @@ db.exec(`
 
 // Run migrations to add householdId columns
 try {
+  // Add nickname to users
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN nickname TEXT;`);
+    console.log('✅ Added nickname to users table');
+  } catch (e) {
+    // Column already exists
+  }
+
   // Add householdId to recipes
   try {
     db.exec(`ALTER TABLE recipes ADD COLUMN householdId INTEGER REFERENCES households(id);`);
@@ -182,29 +190,32 @@ try {
 
   // Clean up duplicate household tasks and create unique index
   try {
-    // First check if index already exists
-    const indexExists = db.prepare(`
-      SELECT name FROM sqlite_master 
+    const indexRow = db.prepare(`
+      SELECT sql FROM sqlite_master
       WHERE type='index' AND name='idx_household_tasks_unique_date'
-    `).get();
+    `).get() as any;
 
-    if (!indexExists) {
-      // Delete duplicates, keeping only the most recent task for each date/type combination
+    const indexSql = indexRow?.sql ? String(indexRow.sql) : '';
+    const needsUserId = !indexRow || !indexSql.includes('userId');
+
+    if (needsUserId) {
+      // Remove duplicates, keeping only the most recent task for each date/type/user combination
       db.exec(`
-        DELETE FROM household_tasks 
+        DELETE FROM household_tasks
         WHERE id NOT IN (
-          SELECT MAX(id) 
-          FROM household_tasks 
-          GROUP BY householdId, taskType, date(completedAt)
+          SELECT MAX(id)
+          FROM household_tasks
+          GROUP BY householdId, taskType, date(completedAt), userId
         )
       `);
-      
-      // Now create the unique index
+
+      // Recreate unique index to allow multiple participants in the same day/slot
+      db.exec(`DROP INDEX IF EXISTS idx_household_tasks_unique_date;`);
       db.exec(`
-        CREATE UNIQUE INDEX idx_household_tasks_unique_date 
-        ON household_tasks(householdId, taskType, date(completedAt))
+        CREATE UNIQUE INDEX idx_household_tasks_unique_date
+        ON household_tasks(householdId, taskType, date(completedAt), userId)
       `);
-      console.log('✅ Created unique index on household_tasks');
+      console.log('✅ Ensured unique index on household_tasks supports multiple users');
     }
   } catch (e) {
     console.log('⚠️ Unique index already exists or failed to create');
