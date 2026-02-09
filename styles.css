@@ -260,7 +260,6 @@ h2 {
 .modal-content {
     background-color: var(--card-bg);
     margin: 5% auto;
-    padding: 30px;
     border-radius: 12px;
     width: 90%;
     max-width: 600px;

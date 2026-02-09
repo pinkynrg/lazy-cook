@@ -1,15 +1,16 @@
 :root {
-  --primary-color: #5b47d1;
-  --primary-hover: #4a39b8;
-  --secondary-color: #7c3aed;
+  --primary-color: #873D48;
+  --primary-rgb: 135, 61, 72;
+  --primary-hover: #ed793a;
+  --secondary-color: #873D48;
   --accent-color: #ec4899;
   --planner-day-header-bg: var(--primary-color);
   --planner-day-header-fg: #ffffff;
   --planner-meal-header-fg: #ffffff;
-  --planner-meal-breakfast-bg: #a0c5e3;
-  --planner-meal-lunch-bg: #139dbc;
-  --planner-meal-dinner-bg: #0e076c;
-  --planner-meal-breakfast-fg: #0b2545;
+  --planner-meal-breakfast-bg: #007EA7;
+  --planner-meal-lunch-bg: #003459;
+  --planner-meal-dinner-bg: #00171F;
+  --planner-meal-breakfast-fg: #ffffff;
   --planner-meal-lunch-fg: #ffffff;
   --planner-meal-dinner-fg: #ffffff;
   --background: #f9fafb;
@@ -333,8 +334,6 @@ header p {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 300px;
-  overflow-y: auto;
 }
 
 .saved-plan-item-compact {
@@ -618,8 +617,8 @@ h2 {
 }
 
 .btn-add {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   font-size: 1.5rem;
   flex-shrink: 0;
@@ -897,19 +896,30 @@ h2 {
 }
 
 .grocery-item {
-  padding: 14px;
-  background: white;
-  border: 1px solid var(--border);
+  padding: 10px 12px;
+  background: rgba(var(--primary-rgb), 0.10); /* enabled */
+  border: none;
   border-radius: 6px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.grocery-item.disabled {
+  background: rgba(var(--primary-rgb), 0.05);
+  box-shadow: none;
+}
+
+.grocery-item.enabled {
+  background: rgba(var(--primary-rgb), 0.10);
 }
 
 .grocery-item.checked {
-  opacity: 0.6;
-  background: var(--border-light);
+  opacity: 0.7;
+  background: rgba(var(--primary-rgb), 0.07);
+  box-shadow: none;
 }
 
 .grocery-item.checked .ingredient-name {
@@ -918,12 +928,17 @@ h2 {
 }
 
 .grocery-checkbox {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
   flex-shrink: 0;
   accent-color: var(--primary-color);
   border-radius: 4px;
+}
+
+.grocery-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .grocery-item-content {
@@ -931,24 +946,28 @@ h2 {
   justify-content: space-between;
   flex: 1;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   min-width: 0;
 }
 
 .grocery-item:hover {
-  background: var(--border-light);
-  border-color: var(--primary-color);
+  background: rgba(var(--primary-rgb), 0.14);
   box-shadow: var(--shadow-md);
 }
 
+.grocery-item.disabled:hover {
+  background: rgba(var(--primary-rgb), 0.05);
+  box-shadow: none;
+}
+
 .grocery-item.checked:hover {
-  background: var(--border-light);
-  border-color: var(--border);
+  background: rgba(var(--primary-rgb), 0.07);
+  box-shadow: none;
 }
 
 .ingredient-name {
   font-weight: 500;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: #1f2937;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -957,11 +976,11 @@ h2 {
 .ingredient-quantity {
   color: var(--primary-color);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   white-space: nowrap;
-  background: #d1fae5;
-  padding: 4px 12px;
-  border-radius: 8px;
+  background: rgba(var(--primary-rgb), 0.12);
+  padding: 2px 10px;
+  border-radius: 6px;
 }
 
 .empty-state {
@@ -1031,7 +1050,6 @@ h2 {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
 }
 
 .modal-content {
@@ -1162,7 +1180,6 @@ h2 {
 
 .modal-content {
   background-color: var(--card-bg);
-  padding: 30px;
   border-radius: 12px;
   width: 90%;
   max-width: 600px;
@@ -1175,7 +1192,6 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
 }
 
 .modal-header h3 {
@@ -1537,8 +1553,8 @@ h2 {
 }
 
 .day-header-cell {
-  background: var(--planner-day-header-bg);
   border-radius: 12px 12px 0 0;
+  border: 1px solid var(--border);
   padding: 16px 8px;
   text-align: center;
   min-width: 0;
@@ -1546,7 +1562,7 @@ h2 {
 }
 
 .day-header-cell .day-name {
-  color: var(--planner-day-header-fg);
+  color: var(--text-primary);
   font-weight: 700;
   font-size: 0.78rem;
   letter-spacing: 0.4px;
@@ -1591,7 +1607,6 @@ h2 {
   
   .day-header-mobile {
     padding: 14px 12px;
-    background: var(--planner-day-header-bg);
     border-bottom: none;
     box-shadow: none;
     cursor: pointer;
@@ -1605,7 +1620,7 @@ h2 {
   }
   
   .day-header-mobile .day-name {
-    color: white;
+    color: var(--text-primary);
     font-size: 1.05rem;
     font-weight: 700;
     text-shadow: none;
@@ -1757,7 +1772,7 @@ h2 {
   }
 
   .day-name {
-    color: white;
+    color: var(--text-primary);
     font-size: 1.05rem;
     font-weight: 700;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -1816,7 +1831,7 @@ h2 {
 .day-name {
   font-weight: 700;
   font-size: 0.77rem;
-  color: #2c3e50;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2689,11 +2704,6 @@ h2 {
     width: 100%;
     justify-content: center;
     padding: 10px 14px;
-  }
-
-  .saved-plans-list-compact {
-    max-height: 250px;
-    overflow-y: auto;
   }
 
   .saved-plan-item-compact {

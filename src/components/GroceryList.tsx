@@ -118,14 +118,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div className="grocery-item-content">
-                    <div>
-                      <div className="ingredient-name">
-                        {item.name}
-                      </div>
-                      {item.original.length > 1 && (
-                        <div className="ingredient-notes">{item.original.length} ricette</div>
-                      )}
-                    </div>
+                    <div className="ingredient-name">{item.name}</div>
                     <div className="ingredient-quantity">{quantityText}</div>
                   </div>
                 </div>

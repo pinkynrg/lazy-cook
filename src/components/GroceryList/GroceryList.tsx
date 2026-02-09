@@ -16,6 +16,16 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
   const [normalizing, setNormalizing] = useState(false);
   const [inspectingItem, setInspectingItem] = useState<GroceryItem | null>(null);
 
+  const sortedGroceryList = groceryList
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const aChecked = Boolean(a.item.checked);
+      const bChecked = Boolean(b.item.checked);
+      if (aChecked !== bChecked) return aChecked ? 1 : -1;
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
+
   const getAggregatedSources = (item: GroceryItem) => {
     const sources = Array.isArray(item.sources) ? item.sources : [];
     const byRecipe = new Map<number, {
@@ -93,7 +103,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
   };
 
   const copyGroceryList = () => {
-    const text = groceryList
+    const text = sortedGroceryList
       .map(item => {
         const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
         return `${item.name} - ${quantityText}`;
@@ -106,8 +116,8 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
     );
   };
 
-  const exportGroceryList = () => {
-    const text = groceryList
+  const _exportGroceryList = () => {
+    const text = sortedGroceryList
       .map(item => {
         const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
         return `${item.name} - ${quantityText}`;
@@ -161,21 +171,22 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
       ) : !isNormalized ? (
         <div className="grocery-list">
           <p className="empty-state">
-            👆 Clicca su "Calcola lista spesa" per generare la lista intelligente
+            👆 Clicca su &quot;Calcola lista spesa&quot; per generare la lista intelligente
           </p>
         </div>
       ) : (
         <>
           <div className="grocery-list">
-            {groceryList.map((item, index) => {
+            {sortedGroceryList.map((item, index) => {
               // Prefer totals computed from per-recipe sources (handles mixed units); fallback to AI/quantities
               const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
               const hasSources = Array.isArray(item.sources) && item.sources.length > 0;
+              const isDisabled = !item.id;
               return (
                 <div 
                   key={item.id || `${item.name}-${index}`}
-                  className={`grocery-item ${item.checked ? 'checked' : ''}`}
-                  style={{ cursor: 'pointer' }}
+                  className={`grocery-item ${item.checked ? 'checked' : ''} ${isDisabled ? 'disabled' : 'enabled'}`}
+                  style={{ cursor: isDisabled ? 'default' : 'pointer' }}
                 >
                   <input
                     type="checkbox"
@@ -195,14 +206,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
                       }
                     }}
                   >
-                    <div>
-                      <div className="ingredient-name">
-                        {item.name}
-                      </div>
-                      {item.sources && item.sources.length > 1 && (
-                        <div className="ingredient-notes">{item.sources.length} ricette</div>
-                      )}
-                    </div>
+                    <div className="ingredient-name">{item.name}</div>
                     <div className="ingredient-quantity">{quantityText}</div>
                   </div>
                   <button
@@ -238,8 +242,8 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
 
       {/* Inspection Modal */}
       {inspectingItem && (
-        <div className="modal-overlay" onClick={() => setInspectingItem(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay grocery-inspect-overlay" onClick={() => setInspectingItem(null)}>
+          <div className="modal-content grocery-inspect-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{inspectingItem.name}</h3>
               <button 
