@@ -94,6 +94,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
           </button>
         </div>
 
+        <div className="modal-body">
         {isEditing ? (
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
@@ -284,7 +285,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
               {recipe.url && (
                 <div style={{
                   padding: '12px 16px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'var(--primary-color)',
                   borderRadius: '8px',
                   marginBottom: '16px'
                 }}>
@@ -412,6 +413,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
               </button>
             )
           )}
+        </div>
         </div>
       </div>
     </div>
