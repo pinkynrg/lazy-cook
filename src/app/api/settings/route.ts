@@ -14,13 +14,34 @@ export async function GET() {
     
     if (!settings) {
       // Initialize if missing for this household
-      db.prepare('INSERT INTO settings (householdId, familySize, enableBreakfast, enableLunch, enableDinner, currentPlanName) VALUES (?, 2, 0, 1, 1, ?)').run(session.householdId, 'Piano Settimanale');
+      db.prepare(`
+        INSERT INTO settings (
+          householdId,
+          familySize,
+          enableBreakfast,
+          enableLunch,
+          enableDinner,
+          currentPlanName,
+          cookBreakfast,
+          cookLunch,
+          cookDinner,
+          cleanBreakfast,
+          cleanLunch,
+          cleanDinner
+        ) VALUES (?, 2, 0, 1, 1, ?, 0, 1, 1, 0, 1, 1)
+      `).run(session.householdId, 'Piano Settimanale');
       return NextResponse.json({ 
         familySize: 2,
         enableBreakfast: false,
         enableLunch: true,
         enableDinner: true,
-        currentPlanName: 'Piano Settimanale'
+        currentPlanName: 'Piano Settimanale',
+        cookBreakfast: false,
+        cookLunch: true,
+        cookDinner: true,
+        cleanBreakfast: false,
+        cleanLunch: true,
+        cleanDinner: true
       });
     }
 
@@ -29,7 +50,13 @@ export async function GET() {
       enableBreakfast: !!settings.enableBreakfast,
       enableLunch: !!settings.enableLunch,
       enableDinner: !!settings.enableDinner,
-      currentPlanName: settings.currentPlanName || 'Piano Settimanale'
+      currentPlanName: settings.currentPlanName || 'Piano Settimanale',
+      cookBreakfast: !!settings.cookBreakfast,
+      cookLunch: !!settings.cookLunch,
+      cookDinner: !!settings.cookDinner,
+      cleanBreakfast: !!settings.cleanBreakfast,
+      cleanLunch: !!settings.cleanLunch,
+      cleanDinner: !!settings.cleanDinner
     });
   } catch (error: any) {
     console.error('Error fetching settings:', error);
@@ -56,7 +83,19 @@ async function updateSettings(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { familySize, enableBreakfast, enableLunch, enableDinner, currentPlanName } = await request.json();
+    const {
+      familySize,
+      enableBreakfast,
+      enableLunch,
+      enableDinner,
+      currentPlanName,
+      cookBreakfast,
+      cookLunch,
+      cookDinner,
+      cleanBreakfast,
+      cleanLunch,
+      cleanDinner
+    } = await request.json();
 
     if (familySize !== undefined && (familySize < 1)) {
       return NextResponse.json(
@@ -88,6 +127,31 @@ async function updateSettings(request: NextRequest) {
     if (currentPlanName !== undefined) {
       updates.push('currentPlanName = ?');
       params.push(currentPlanName);
+    }
+
+    if (cookBreakfast !== undefined) {
+      updates.push('cookBreakfast = ?');
+      params.push(cookBreakfast ? 1 : 0);
+    }
+    if (cookLunch !== undefined) {
+      updates.push('cookLunch = ?');
+      params.push(cookLunch ? 1 : 0);
+    }
+    if (cookDinner !== undefined) {
+      updates.push('cookDinner = ?');
+      params.push(cookDinner ? 1 : 0);
+    }
+    if (cleanBreakfast !== undefined) {
+      updates.push('cleanBreakfast = ?');
+      params.push(cleanBreakfast ? 1 : 0);
+    }
+    if (cleanLunch !== undefined) {
+      updates.push('cleanLunch = ?');
+      params.push(cleanLunch ? 1 : 0);
+    }
+    if (cleanDinner !== undefined) {
+      updates.push('cleanDinner = ?');
+      params.push(cleanDinner ? 1 : 0);
     }
 
     if (updates.length > 0) {

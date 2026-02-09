@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import SavedPlans from '@/components/SavedPlans';
 import type { Settings } from '@/types/recipe';
+import styles from './page.module.scss';
 
 export default function SettingsPage() {
   const [familySize, setFamilySize] = useState(2);
@@ -10,6 +11,13 @@ export default function SettingsPage() {
   const [enableLunch, setEnableLunch] = useState(true);
   const [enableDinner, setEnableDinner] = useState(true);
   const [currentPlanName, setCurrentPlanName] = useState('Piano Settimanale');
+
+  const [cookBreakfast, setCookBreakfast] = useState(false);
+  const [cookLunch, setCookLunch] = useState(true);
+  const [cookDinner, setCookDinner] = useState(true);
+  const [cleanBreakfast, setCleanBreakfast] = useState(false);
+  const [cleanLunch, setCleanLunch] = useState(true);
+  const [cleanDinner, setCleanDinner] = useState(true);
 
   useEffect(() => {
     loadSettings();
@@ -25,6 +33,13 @@ export default function SettingsPage() {
         setEnableLunch(data.enableLunch);
         setEnableDinner(data.enableDinner);
         setCurrentPlanName(data.currentPlanName || 'Piano Settimanale');
+
+        setCookBreakfast(!!data.cookBreakfast);
+        setCookLunch(data.cookLunch !== undefined ? !!data.cookLunch : true);
+        setCookDinner(data.cookDinner !== undefined ? !!data.cookDinner : true);
+        setCleanBreakfast(!!data.cleanBreakfast);
+        setCleanLunch(data.cleanLunch !== undefined ? !!data.cleanLunch : true);
+        setCleanDinner(data.cleanDinner !== undefined ? !!data.cleanDinner : true);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -38,6 +53,12 @@ export default function SettingsPage() {
       enableLunch,
       enableDinner,
       currentPlanName,
+      cookBreakfast,
+      cookLunch,
+      cookDinner,
+      cleanBreakfast,
+      cleanLunch,
+      cleanDinner,
       ...updates,
     };
 
@@ -46,6 +67,13 @@ export default function SettingsPage() {
     if (updates.enableLunch !== undefined) setEnableLunch(updates.enableLunch);
     if (updates.enableDinner !== undefined) setEnableDinner(updates.enableDinner);
     if (updates.currentPlanName !== undefined) setCurrentPlanName(updates.currentPlanName);
+
+    if (updates.cookBreakfast !== undefined) setCookBreakfast(!!updates.cookBreakfast);
+    if (updates.cookLunch !== undefined) setCookLunch(!!updates.cookLunch);
+    if (updates.cookDinner !== undefined) setCookDinner(!!updates.cookDinner);
+    if (updates.cleanBreakfast !== undefined) setCleanBreakfast(!!updates.cleanBreakfast);
+    if (updates.cleanLunch !== undefined) setCleanLunch(!!updates.cleanLunch);
+    if (updates.cleanDinner !== undefined) setCleanDinner(!!updates.cleanDinner);
 
     try {
       await fetch('/api/settings', {
@@ -70,7 +98,7 @@ export default function SettingsPage() {
         <p>Configura le preferenze per il tuo piano pasti</p>
       </div>
 
-      <div className="page-content" style={{ padding: '24px' }}>
+      <div className={`page-content ${styles.pageContentPad}`}>
         <div className="settings-grid">
           <div className="setting-card">
             <div className="setting-header">
@@ -131,6 +159,49 @@ export default function SettingsPage() {
                     checked={enableDinner}
                     onChange={(e) => updateSettings({ enableDinner: e.target.checked })}
                   />
+                  <span><i className="bi bi-moon-fill"></i> Cena</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="setting-card">
+            <div className="setting-header">
+              <i className="bi bi-check2-square"></i>
+              <h3>Task Familiari</h3>
+            </div>
+            <div className="setting-body">
+              <p className="setting-description">
+                Seleziona quando di solito si cucina e quando di solito si lavano i piatti.
+                Queste opzioni controllano quali colonne compaiono nella tabella dei task.
+              </p>
+
+              <div className="meal-toggles-vertical" style={{ gap: 12 }}>
+                <div style={{ fontWeight: 700, marginTop: 4 }}>Quando si cucina</div>
+                <label className="meal-toggle-item">
+                  <input type="checkbox" checked={cookBreakfast} onChange={(e) => updateSettings({ cookBreakfast: e.target.checked })} />
+                  <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
+                </label>
+                <label className="meal-toggle-item">
+                  <input type="checkbox" checked={cookLunch} onChange={(e) => updateSettings({ cookLunch: e.target.checked })} />
+                  <span><i className="bi bi-sun-fill"></i> Pranzo</span>
+                </label>
+                <label className="meal-toggle-item">
+                  <input type="checkbox" checked={cookDinner} onChange={(e) => updateSettings({ cookDinner: e.target.checked })} />
+                  <span><i className="bi bi-moon-fill"></i> Cena</span>
+                </label>
+
+                <div style={{ fontWeight: 700, marginTop: 10 }}>Quando si lavano i piatti</div>
+                <label className="meal-toggle-item">
+                  <input type="checkbox" checked={cleanBreakfast} onChange={(e) => updateSettings({ cleanBreakfast: e.target.checked })} />
+                  <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
+                </label>
+                <label className="meal-toggle-item">
+                  <input type="checkbox" checked={cleanLunch} onChange={(e) => updateSettings({ cleanLunch: e.target.checked })} />
+                  <span><i className="bi bi-sun-fill"></i> Pranzo</span>
+                </label>
+                <label className="meal-toggle-item">
+                  <input type="checkbox" checked={cleanDinner} onChange={(e) => updateSettings({ cleanDinner: e.target.checked })} />
                   <span><i className="bi bi-moon-fill"></i> Cena</span>
                 </label>
               </div>

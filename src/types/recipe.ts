@@ -36,6 +36,15 @@ export interface Settings {
   enableLunch: boolean;
   enableDinner: boolean;
   currentPlanName?: string;
+
+  // Which meals usually require cooking / dishes.
+  // Used to decide which task columns are relevant.
+  cookBreakfast?: boolean;
+  cookLunch?: boolean;
+  cookDinner?: boolean;
+  cleanBreakfast?: boolean;
+  cleanLunch?: boolean;
+  cleanDinner?: boolean;
 }
 
 export interface Ingredient {

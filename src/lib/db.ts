@@ -262,6 +262,58 @@ try {
     console.log('Settings table migration skipped or already done:', e.message);
   }
 
+  // Add "usual" cooking/cleaning meal settings
+  // These drive which task columns are shown in the family tasks table.
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN cookBreakfast INTEGER NOT NULL DEFAULT 0;`);
+    console.log('✅ Added cookBreakfast to settings');
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN cookLunch INTEGER NOT NULL DEFAULT 1;`);
+    console.log('✅ Added cookLunch to settings');
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN cookDinner INTEGER NOT NULL DEFAULT 1;`);
+    console.log('✅ Added cookDinner to settings');
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN cleanBreakfast INTEGER NOT NULL DEFAULT 0;`);
+    console.log('✅ Added cleanBreakfast to settings');
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN cleanLunch INTEGER NOT NULL DEFAULT 1;`);
+    console.log('✅ Added cleanLunch to settings');
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN cleanDinner INTEGER NOT NULL DEFAULT 1;`);
+    console.log('✅ Added cleanDinner to settings');
+  } catch (e) {}
+
+  // Migrate legacy task types to meal-based ones used by the new UI.
+  // Old app versions logged one cooking + one dishes task per day.
+  // We default those to dinner.
+  try {
+    const tx = db.transaction(() => {
+      db.exec(`UPDATE household_tasks SET taskType = 'dinner_cook' WHERE taskType = 'cooking';`);
+      db.exec(`UPDATE household_tasks SET taskType = 'dinner_clean' WHERE taskType = 'dishes';`);
+
+      // De-duplicate any conflicts introduced by the rename.
+      db.exec(`
+        DELETE FROM household_tasks
+        WHERE id NOT IN (
+          SELECT MAX(id)
+          FROM household_tasks
+          GROUP BY householdId, taskType, date(completedAt)
+        )
+      `);
+    });
+    tx();
+    console.log('✅ Migrated legacy household_tasks types to meal-based');
+  } catch (e) {
+    // Ignore if the table does not exist yet or if SQLite is mid-migration.
+  }
+
   // Add householdId to saved_plans
   try {
     db.exec(`ALTER TABLE saved_plans ADD COLUMN householdId INTEGER REFERENCES households(id);`);

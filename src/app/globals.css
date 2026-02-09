@@ -73,6 +73,17 @@ header p {
   color: var(--text-primary);
   font-weight: 500;
   font-size: 0.95rem;
+  min-width: 0;
+  max-width: 35vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .user-name {
+    max-width: 45vw;
+  }
 }
 
 .user-name i {
@@ -2770,7 +2781,9 @@ h2 {
 
   .recipe-library-section,
   .saved-plans-section,
-  .weekly-planner {
+  .weekly-planner,
+  .recipes-section,
+  .grocery-section {
     padding: 12px;
   }
 }
@@ -3354,7 +3367,7 @@ h2 {
 
 .page-header {
   margin-bottom: 30px;
-  text-align: center;
+  text-align: left;
 }
 
 .page-header h1 {
