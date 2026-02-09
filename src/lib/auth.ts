@@ -76,12 +76,6 @@ export async function clearSessionCookie(): Promise<void> {
   cookieStore.delete(JWT_COOKIE_NAME);
 }
 
-// Get user by ID
-export function getUserById(id: number): User | null {
-  const stmt = db.prepare('SELECT id, username FROM users WHERE id = ?');
-  return stmt.get(id) as User | undefined || null;
-}
-
 // Get user by username
 export function getUserByUsername(username: string): (User & { password: string }) | null {
   const stmt = db.prepare('SELECT id, username, password FROM users WHERE username = ?');

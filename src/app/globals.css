@@ -3,6 +3,15 @@
   --primary-hover: #4a39b8;
   --secondary-color: #7c3aed;
   --accent-color: #ec4899;
+  --planner-day-header-bg: var(--primary-color);
+  --planner-day-header-fg: #ffffff;
+  --planner-meal-header-fg: #ffffff;
+  --planner-meal-breakfast-bg: #a0c5e3;
+  --planner-meal-lunch-bg: #139dbc;
+  --planner-meal-dinner-bg: #0e076c;
+  --planner-meal-breakfast-fg: #0b2545;
+  --planner-meal-lunch-fg: #ffffff;
+  --planner-meal-dinner-fg: #ffffff;
   --background: #f9fafb;
   --card-bg: #ffffff;
   --text-primary: #1f2937;
@@ -1508,7 +1517,7 @@ h2 {
 .week-grid-rows {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 }
 
 .week-mobile-view {
@@ -1528,24 +1537,27 @@ h2 {
 }
 
 .day-header-cell {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 2px solid #e1e8ed;
+  background: var(--planner-day-header-bg);
   border-radius: 12px 12px 0 0;
   padding: 16px 8px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   min-width: 0;
   overflow: hidden;
 }
 
+.day-header-cell .day-name {
+  color: var(--planner-day-header-fg);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
 .meal-cell {
-  background: white;
-  border: 2px solid #e1e8ed;
-  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
@@ -1567,9 +1579,7 @@ h2 {
   
   .day-column-mobile {
     background: white;
-    border-radius: 8px;
     border: 1px solid var(--border);
-    box-shadow: var(--shadow-md);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     scroll-margin-top: 20px;
@@ -1581,9 +1591,9 @@ h2 {
   
   .day-header-mobile {
     padding: 14px 12px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: var(--planner-day-header-bg);
     border-bottom: none;
-    box-shadow: var(--shadow-md);
+    box-shadow: none;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -1591,14 +1601,14 @@ h2 {
   }
   
   .day-column-mobile.collapsed .day-header-mobile {
-    border-radius: 7px;
+    border-radius: 0px;
   }
   
   .day-header-mobile .day-name {
     color: white;
     font-size: 1.05rem;
     font-weight: 700;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
   }
   
   .day-toggle-btn {
@@ -1859,9 +1869,10 @@ h2 {
 
 .recipe-selector {
   background: #f8f9fa;
-  border-bottom: 1px solid var(--border);
   padding: 8px;
-  max-height: 240px;
+  flex: 1;
+  min-height: 0;
+  max-height: 304px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1919,13 +1930,28 @@ h2 {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-bottom: none;
-  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25);
+  box-shadow: none;
   gap: 6px;
   overflow: visible;
   min-height: 42px;
   flex-shrink: 0;
+  color: var(--planner-meal-header-fg);
+}
+
+.meal-header.meal-type-breakfast {
+  background: var(--planner-meal-breakfast-bg);
+  color: var(--planner-meal-breakfast-fg);
+}
+
+.meal-header.meal-type-lunch {
+  background: var(--planner-meal-lunch-bg);
+  color: var(--planner-meal-lunch-fg);
+}
+
+.meal-header.meal-type-dinner {
+  background: var(--planner-meal-dinner-bg);
+  color: var(--planner-meal-dinner-fg);
 }
 
 .meal-header-actions {
@@ -1936,7 +1962,7 @@ h2 {
 
 .meal-out-btn {
   background: rgba(236, 72, 153, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 0;
   color: white;
   width: 26px;
   height: 26px;
@@ -1959,7 +1985,7 @@ h2 {
 
 .meal-out-btn.active {
   background: rgba(255, 255, 255, 0.9);
-  color: var(--primary-color);
+  color: rgba(0, 0, 0, 0.82);
   border-color: rgba(255, 255, 255, 0.9);
 }
 
@@ -1970,7 +1996,7 @@ h2 {
 }
 
 .meal-section.meal-out .meal-header {
-  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  background: #6b7280;
 }
 
 .meal-out-message {
@@ -2020,7 +2046,7 @@ h2 {
 
 .meal-add-btn-header {
   background: rgba(20, 184, 166, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 0;
   color: white;
   width: 26px;
   height: 26px;
@@ -2042,11 +2068,37 @@ h2 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Make header action buttons adapt to the meal header background */
+.meal-header .meal-add-btn-header,
+.meal-header .meal-out-btn {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: currentColor;
+}
+
+.meal-header .meal-add-btn-header:hover,
+.meal-header .meal-out-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.meal-header.meal-type-breakfast .meal-add-btn-header,
+.meal-header.meal-type-breakfast .meal-out-btn {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+.meal-header.meal-type-breakfast .meal-add-btn-header:hover,
+.meal-header.meal-type-breakfast .meal-out-btn:hover {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
 .meal-title {
   font-weight: 600;
   font-size: 0.8rem;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  color: currentColor;
+  text-shadow: none;
   letter-spacing: 0.5px;
   text-transform: lowercase;
   overflow: hidden;
@@ -2060,7 +2112,7 @@ h2 {
   flex-direction: column;
   gap: 8px;
   flex: 1;
-  background: #fafbfc;
+  border: 1px solid var(--border);
 }
 
 .empty-meal {
@@ -2068,7 +2120,7 @@ h2 {
   color: var(--text-secondary);
   font-size: 0.85rem;
   padding: 16px;
-  border: 1px dashed var(--border);
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: white;
   transition: all 0.2s ease;
@@ -2149,7 +2201,6 @@ h2 {
 .recipe-card-mini {
   background: white;
   border-radius: 6px;
-  border: 1px solid var(--border);
   cursor: move;
   transition: all 0.2s ease;
   display: flex;
@@ -2641,8 +2692,8 @@ h2 {
   }
 
   .saved-plans-list-compact {
-    max-height: none;
-    overflow-y: visible;
+    max-height: 250px;
+    overflow-y: auto;
   }
 
   .saved-plan-item-compact {

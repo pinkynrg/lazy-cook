@@ -255,7 +255,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     
     return (
       <div key={`${day.id}-${mealType}`} className={`meal-cell ${isMealOut(day.id, mealType) ? 'meal-out' : ''}`}>
-        <div className="meal-header">
+        <div className={`meal-header meal-type-${mealType}`}>
           <span className="meal-title">{mealTitles[mealType]}</span>
           <div className="meal-header-actions">
             {!isMealOut(day.id, mealType) && (
