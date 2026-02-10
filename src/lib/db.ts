@@ -310,12 +310,13 @@ try {
       db.exec(`UPDATE household_tasks SET taskType = 'dinner_clean' WHERE taskType = 'dishes';`);
 
       // De-duplicate any conflicts introduced by the rename.
+      // NOTE: Must include userId to preserve tasks from multiple users on the same day/slot.
       db.exec(`
         DELETE FROM household_tasks
         WHERE id NOT IN (
           SELECT MAX(id)
           FROM household_tasks
-          GROUP BY householdId, taskType, date(completedAt)
+          GROUP BY householdId, taskType, date(completedAt), userId
         )
       `);
     });
