@@ -62,7 +62,10 @@ export default function RegisterPage() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>🍳 Lazy Cook</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <img src="/logo.svg" alt="Logo" width="40" height="40" style={{ flexShrink: 0, imageRendering: 'auto', WebkitFontSmoothing: 'antialiased' }} />
+            Lazy Cook
+          </h1>
           <p>Crea il tuo account</p>
         </div>
 

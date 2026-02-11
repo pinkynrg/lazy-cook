@@ -282,7 +282,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
                 </div>
               </div>
 
-              {recipe.url && (
+              {recipe.url && !recipe.url.startsWith('manual://') ? (
                 <div style={{
                   padding: '12px 16px',
                   background: 'var(--primary-color)',
@@ -306,6 +306,33 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
                     <span>Vedi ricetta originale</span>
                     <i className="bi bi-arrow-up-right" style={{ marginLeft: 'auto' }}></i>
                   </a>
+                </div>
+              ) : (
+                <div 
+                  style={{
+                    padding: '12px 16px',
+                    background: '#e0e0e0',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    cursor: 'not-allowed'
+                  }}
+                  title="Questa è una ricetta creata manualmente, non ha un sito web di origine"
+                >
+                  <div
+                    style={{
+                      color: '#666',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontWeight: '500',
+                      opacity: 0.6
+                    }}
+                  >
+                    <i className="bi bi-link-45deg" style={{ fontSize: '1.2rem' }}></i>
+                    <span>Ricetta manuale - nessun sito web</span>
+                    <i className="bi bi-pencil-square" style={{ marginLeft: 'auto' }}></i>
+                  </div>
                 </div>
               )}
             </>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import styles from './Navigation.module.scss';
 
 interface NavigationProps {
@@ -33,12 +34,18 @@ export default function Navigation({ currentUser, onLogout, onOpenHouseholds }: 
         >
           <i className={`bi ${isOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
         </button>
-        <div className={styles.appTitle}>🍳 Lazy Cook</div>
+        <div className={styles.appTitle}>
+          <Image src="/logo.svg" alt="Logo" width={36} height={36} className={styles.logo} />
+          Lazy Cook
+        </div>
       </div>
 
       <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
         <div className={styles.sidebarHeader}>
-          <h2>🍳 Lazy Cook</h2>
+          <h2>
+            <Image src="/logo.svg" alt="Logo" width={48} height={48} className={styles.logo} />
+            Lazy Cook
+          </h2>
         </div>
 
         <nav>

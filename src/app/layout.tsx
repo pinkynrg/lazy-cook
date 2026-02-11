@@ -1,9 +1,8 @@
 'use client';
 
-import type { Metadata } from 'next';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import Navigation from '@/components/Navigation';
+import Navigation from '@/components/Navigation/Navigation';
 import HouseholdManager from '@/components/HouseholdManager';
 import './globals.css';
 
@@ -57,7 +56,9 @@ export default function RootLayout({
   return (
     <html lang="it">
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍳</text></svg>" />
+        <title>Lazy Cook - Organizza i tuoi pasti</title>
+        <meta name="description" content="Pianifica i tuoi pasti settimanali, gestisci ricette e crea liste della spesa automaticamente." />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
       </head>
       <body>
