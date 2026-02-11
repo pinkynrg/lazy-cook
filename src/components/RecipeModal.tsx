@@ -98,7 +98,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
         {isEditing ? (
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              🖼️ URL Immagine:
+              <i className="bi bi-image"></i> URL Immagine:
             </label>
             <input
               type="text"
@@ -173,7 +173,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
               </div>
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-                  👥 Porzioni:
+                  <i className="bi bi-people-fill"></i> Porzioni:
                 </label>
                 <input
                   type="text"
@@ -266,7 +266,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  <span style={{ fontSize: '1.2rem' }}>👥</span>
+                  <span style={{ fontSize: '1.2rem' }}><i className="bi bi-people-fill"></i></span>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '2px' }}>
                       Porzioni
@@ -359,7 +359,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
               }}
             />
             <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
-              💡 Inserisci un ingrediente per riga
+              <i className="bi bi-lightbulb"></i> Inserisci un ingrediente per riga
             </small>
           </div>
         ) : (
@@ -374,7 +374,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
 
         {(recipe.instructions || isEditing) && (
           <div style={{ marginTop: '24px' }}>
-            <h4 style={{ marginBottom: '12px' }}>👨‍🍳 Preparazione:</h4>
+            <h4 style={{ marginBottom: '12px' }}><i className="bi bi-egg-fried"></i> Preparazione:</h4>
             {isEditing ? (
               <textarea
                 value={editedInstructions}
@@ -427,7 +427,7 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
                 className="btn btn-primary"
                 onClick={handleSaveAll}
               >
-                ✓ Salva Modifiche
+                <i className="bi bi-check"></i> Salva Modifiche
               </button>
             </>
           ) : (

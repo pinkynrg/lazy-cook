@@ -93,7 +93,7 @@ export default function RecipesPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>📚 Le Mie Ricette</h1>
+        <h1><i className="bi bi-book"></i> Le Mie Ricette</h1>
         <p>Gestisci la tua collezione di ricette</p>
       </div>
 

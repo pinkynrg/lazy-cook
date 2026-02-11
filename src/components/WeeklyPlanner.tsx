@@ -312,7 +312,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                 )}
                 title="Aggiungi ricetta"
               >
-                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType ? '✕' : '+'}
+                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType ? <i className="bi bi-x"></i> : '+'}
               </button>
             )}
             {!isMealOut(day.id, mealType) && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) && (
@@ -414,8 +414,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                                   if (e.key === 'Escape') cancelEditingAssignmentServings();
                                 }}
                               />
-                              <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva">✓</button>
-                              <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla">✕</button>
+                              <button onClick={() => saveAssignmentServings(assignment.id)} className="servings-btn-save" title="Salva"><i className="bi bi-check"></i></button>
+                              <button onClick={cancelEditingAssignmentServings} className="servings-btn-cancel" title="Annulla"><i className="bi bi-x"></i></button>
                             </div>
                           ) : null}
                         </div>

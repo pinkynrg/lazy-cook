@@ -171,7 +171,7 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
       ) : !isNormalized ? (
         <div className="grocery-list">
           <p className="empty-state">
-            👆 Clicca su &quot;Calcola lista spesa&quot; per generare la lista intelligente
+            <i className="bi bi-hand-index"></i> Clicca su &quot;Calcola lista spesa&quot; per generare la lista intelligente
           </p>
         </div>
       ) : (

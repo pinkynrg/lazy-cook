@@ -87,14 +87,14 @@ export default function RecipeCard({
                   className="servings-btn-save" 
                   title="Salva"
                 >
-                  ✓
+                  <i className="bi bi-check"></i>
                 </button>
                 <button 
                   onClick={onCancelEditServings} 
                   className="servings-btn-cancel" 
                   title="Annulla"
                 >
-                  ✕
+                  <i className="bi bi-x"></i>
                 </button>
               </div>
             ) : (

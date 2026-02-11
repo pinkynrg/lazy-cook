@@ -16,7 +16,7 @@ export default function TaskHistoryItem({ icon, label, username, time, date, onD
       <div className={styles.content}>
         <span className={styles.label}>{label}</span>
         <span className={styles.user}>{username}</span>
-        <span className={styles.date}>📅 {date}</span>
+        <span className={styles.date}><i className="bi bi-calendar-week"></i> {date}</span>
         <span className={styles.time}>{time}</span>
       </div>
       {onDelete && (
@@ -25,7 +25,7 @@ export default function TaskHistoryItem({ icon, label, username, time, date, onD
           className={styles.deleteBtn}
           title="Elimina task"
         >
-          ✕
+          <i className="bi bi-x"></i>
         </button>
       )}
     </div>

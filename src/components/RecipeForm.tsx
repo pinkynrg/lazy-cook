@@ -106,7 +106,7 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
         const errorData = await response.json();
         let errorMessage = errorData.error || 'Errore durante l\'estrazione';
         if (errorData.hint) {
-          errorMessage += `\n\n💡 ${errorData.hint}`;
+          errorMessage += `\n\nSuggerimento: ${errorData.hint}`;
         }
         throw new Error(errorMessage);
       }
@@ -191,7 +191,7 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
           const errorData = await response.json();
           let errorMessage = errorData.error || 'Errore durante l\'estrazione';
           if (errorData.hint) {
-            errorMessage += `\n\n💡 ${errorData.hint}`;
+            errorMessage += `\n\nSuggerimento: ${errorData.hint}`;
           }
           throw new Error(errorMessage);
         }
@@ -322,7 +322,7 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
               onClick={handleSearch}
               disabled={loading || isSearching}
             >
-              {isSearching ? '⏳' : '🔍'}
+              {isSearching ? <i className="bi bi-hourglass-split"></i> : <i className="bi bi-search"></i>}
             </button>
           </div>
           
@@ -355,7 +355,7 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
           
           {loading && (
             <div className="loading-message">
-              <span>⏳ Importando ricetta...</span>
+              <span><i className="bi bi-hourglass-split"></i> Importando ricetta...</span>
             </div>
           )}
         </div>
@@ -370,7 +370,7 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
             disabled={loading}
           />
           <button type="submit" className="btn btn-primary btn-add" disabled={loading}>
-            {loading ? '⏳' : '+'}
+            {loading ? <i className="bi bi-hourglass-split"></i> : '+'}
           </button>
         </div>
       )}

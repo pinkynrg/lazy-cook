@@ -133,7 +133,7 @@ export default function SettingsPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>⚙️ Impostazioni</h1>
+        <h1><i className="bi bi-gear"></i> Impostazioni</h1>
         <p>Configura le preferenze per il tuo piano pasti</p>
       </div>
 

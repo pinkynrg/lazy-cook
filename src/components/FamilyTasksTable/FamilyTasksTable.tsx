@@ -421,7 +421,7 @@ export default function FamilyTasksTable() {
     <section className={styles.wrapper}>
       <div className={styles.header}>
         <div>
-          <h2 className={styles.title}>📅 Task Familiari</h2>
+          <h2 className={styles.title}><i className="bi bi-calendar-week"></i> Task Familiari</h2>
           <div className={styles.subtitle}>Compila e consulta chi ha fatto cosa, giorno per giorno.</div>
         </div>
 
