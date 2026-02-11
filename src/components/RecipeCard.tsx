@@ -33,13 +33,27 @@ export default function RecipeCard({
   onCancelEditServings,
   onServingsInputChange
 }: RecipeCardProps) {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open if clicking on a button or input
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button')) {
+      return;
+    }
+    onView(recipe);
+  };
+
   return (
     <div
       className="recipe-card-mini"
       draggable={draggable}
       onDragStart={onDragStart}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
     >
-      <div className="recipe-card-mini-image">
+      <div className="recipe-card-mini-image" onClick={(e) => {
+        e.stopPropagation();
+        handleCardClick(e);
+      }}>
         {recipe.image ? (
           <>
             <img src={recipe.image} alt={recipe.name} draggable="false" />
@@ -96,13 +110,6 @@ export default function RecipeCard({
         )}
       </div>
       <div className="recipe-card-actions">
-        <button
-          className="recipe-btn-view"
-          onClick={() => onView(recipe)}
-          title="Visualizza ricetta"
-        >
-          <i className="bi bi-eye-fill"></i>
-        </button>
         <button
           className="recipe-btn-remove"
           onClick={() => onRemove(assignment?.id || recipe.id)}

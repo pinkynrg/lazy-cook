@@ -41,6 +41,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
   const [assignmentServingsInput, setAssignmentServingsInput] = useState('');
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [mealsOut, setMealsOut] = useState<Set<MealOutKey>>(new Set());
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Load eating out status from database on mount and when recipes change
   useEffect(() => {
@@ -167,11 +169,53 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
   const handleDragStart = (e: React.DragEvent, recipeId: number) => {
     e.dataTransfer.setData('recipeId', recipeId.toString());
     e.dataTransfer.effectAllowed = 'copy';
+    setIsDragging(true);
   };
 
   const handleAssignmentDragStart = (e: React.DragEvent, assignmentId: number) => {
     e.dataTransfer.setData('assignmentId', assignmentId.toString());
     e.dataTransfer.effectAllowed = 'move';
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    setDragStartPos(null);
+  };
+
+  const handleCardMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button') || target.closest('input')) {
+      return;
+    }
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleCardClick = (recipe: Recipe, e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button') || target.closest('input')) {
+      return;
+    }
+
+    if (isDragging) {
+      setDragStartPos(null);
+      return;
+    }
+
+    if (dragStartPos) {
+      const distance = Math.sqrt(
+        Math.pow(e.clientX - dragStartPos.x, 2) + 
+        Math.pow(e.clientY - dragStartPos.y, 2)
+      );
+      
+      if (distance < 5) {
+        onViewRecipe(recipe);
+      }
+    } else {
+      onViewRecipe(recipe);
+    }
+    
+    setDragStartPos(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -338,6 +382,10 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                         className="recipe-card-mini"
                         draggable
                         onDragStart={(e) => handleAssignmentDragStart(e, assignment.id)}
+                        onDragEnd={handleDragEnd}
+                        onMouseDown={handleCardMouseDown}
+                        onClick={(e) => handleCardClick(recipe, e)}
+                        style={{ cursor: 'pointer' }}
                       >
                         <div className="recipe-card-mini-image">
                           {recipe.image ? (
@@ -381,13 +429,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                               <i className="bi bi-person-fill"></i> {assignment.plannedServings}
                             </button>
                           )}
-                          <button 
-                            className="recipe-btn-view"
-                            onClick={() => onViewRecipe(recipe)}
-                            title="Visualizza ricetta"
-                          >
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
                           <button 
                             className="recipe-btn-remove"
                             onClick={() => onRemoveAssignment(assignment.id)}
