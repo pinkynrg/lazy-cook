@@ -1,53 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as cheerio from 'cheerio';
 
-interface GiallozafferanoSuggestion {
+interface CucchiaioRecipe {
   url: string;
-  term: string;
+  name: string;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CucchiaioApiResponse {
+  scraper: string;
+  table: string;
+  page: number | null;
+  page_size: number;
+  total: number;
+  count: number;
+  search: string;
+  search_columns: string[];
+  data: CucchiaioRecipe[];
 }
 
 interface RecipeResult {
   url: string;
   name: string;
   image?: string;
-}
-
-// Fetch search results page and extract ALL recipe URLs from gz-title elements
-async function getAllRecipeUrls(searchPageUrl: string): Promise<{ url: string; name: string }[]> {
-  console.log(`[getAllRecipeUrls] Fetching search page: ${searchPageUrl}`);
-  try {
-    const response = await fetch(searchPageUrl, {
-      headers: {
-        'accept': 'text/html',
-        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
-      },
-    });
-
-    if (!response.ok) {
-      console.log(`[getAllRecipeUrls] Failed to fetch: ${response.status}`);
-      return [];
-    }
-
-    const html = await response.text();
-    
-    // Extract all recipe URLs and titles from gz-title anchors
-    // Pattern: <h2 class="gz-title"><a href="URL" title="Name">
-    const regex = /<h2\s+class="gz-title">\s*<a\s+href="([^"]+)"\s+title="([^"]+)"/g;
-    const recipes: { url: string; name: string }[] = [];
-    let match;
-    
-    while ((match = regex.exec(html)) !== null) {
-      recipes.push({
-        url: match[1],
-        name: match[2],
-      });
-    }
-    
-    console.log(`[getAllRecipeUrls] Found ${recipes.length} recipes on page`);
-    return recipes;
-  } catch (error) {
-    console.error(`[getAllRecipeUrls] Error:`, error);
-    return [];
-  }
 }
 
 // Extract image from actual recipe page using Schema.org JSON-LD
@@ -57,7 +34,7 @@ async function extractImageFromRecipe(url: string): Promise<string | undefined> 
     const response = await fetch(url, {
       headers: {
         'accept': 'text/html',
-        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
     });
 
@@ -67,73 +44,99 @@ async function extractImageFromRecipe(url: string): Promise<string | undefined> 
     }
 
     const html = await response.text();
-    
-    // Extract JSON-LD from the page
-    const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
-    
-    if (!jsonLdMatch) {
-      console.log(`[extractImageFromRecipe] No JSON-LD found`);
-      return undefined;
-    }
+    const $ = cheerio.load(html);
 
-    for (const match of jsonLdMatch) {
+    // Find JSON-LD script tag containing Recipe data
+    let recipeImage: string | undefined;
+    
+    $('script[type="application/ld+json"]').each((_, element) => {
       try {
-        const jsonContent = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
-        const data = JSON.parse(jsonContent);
+        let content = $(element).html();
+        if (!content) return;
         
-        // Handle both single object and array of objects
-        const items = Array.isArray(data) ? data : [data];
+        // Clean up content - remove control characters that can break JSON parsing
+        content = content
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+          .trim();
         
-        for (const item of items) {
-          const itemType = item['@type'];
-          
-          if (itemType === 'Recipe' || (Array.isArray(itemType) && itemType.includes('Recipe'))) {
-            if (item.image) {
-              // Handle different image formats
-              if (typeof item.image === 'string') {
-                return item.image;
-              } else if (Array.isArray(item.image) && item.image.length > 0) {
-                const firstImage = item.image[0];
-                return typeof firstImage === 'string' ? firstImage : firstImage.url;
-              } else if (item.image.url) {
-                return item.image.url;
-              }
-            }
+        const parsed = JSON.parse(content);
+        
+        // Handle direct Recipe type
+        if (parsed['@type'] === 'Recipe') {
+          recipeImage = extractImageFromJsonLd(parsed);
+          if (recipeImage) return false; // Stop iteration
+        } 
+        // Handle array of items
+        else if (Array.isArray(parsed)) {
+          const recipe = parsed.find(item => item && item['@type'] === 'Recipe');
+          if (recipe) {
+            recipeImage = extractImageFromJsonLd(recipe);
+            if (recipeImage) return false;
+          }
+        } 
+        // Handle @graph structure
+        else if (parsed['@graph']) {
+          const recipe = parsed['@graph'].find((item: any) => item && item['@type'] === 'Recipe');
+          if (recipe) {
+            recipeImage = extractImageFromJsonLd(recipe);
+            if (recipeImage) return false;
           }
         }
-      } catch {
-        // Continue to next JSON-LD block
+      } catch (e) {
+        // Continue to next script tag
       }
-    }
+    });
 
-    return undefined;
+    return recipeImage;
   } catch (error) {
     console.error(`[extractImageFromRecipe] Error:`, error);
     return undefined;
   }
 }
 
-// Get all recipes with images from a search page
-async function getRecipesFromSearchPage(searchPageUrl: string): Promise<RecipeResult[]> {
-  const recipes = await getAllRecipeUrls(searchPageUrl);
+// Helper function to extract image URL from JSON-LD Recipe object
+function extractImageFromJsonLd(recipe: any): string | undefined {
+  if (!recipe.image) return undefined;
   
-  if (recipes.length === 0) {
-    return [];
+  // Handle different image formats
+  if (typeof recipe.image === 'string') {
+    return recipe.image;
+  } else if (Array.isArray(recipe.image) && recipe.image.length > 0) {
+    const firstImage = recipe.image[0];
+    return typeof firstImage === 'string' ? firstImage : firstImage.url;
+  } else if (recipe.image.url) {
+    return recipe.image.url;
   }
   
-  // Fetch images for all recipes in parallel
-  const results = await Promise.all(
-    recipes.map(async (recipe) => {
-      const image = await extractImageFromRecipe(recipe.url);
-      return {
-        url: recipe.url,
-        name: recipe.name,
-        image,
-      };
-    })
-  );
-  
-  return results;
+  return undefined;
+}
+
+// Fetch recipes from the Cucchiaio API
+async function searchRecipesFromApi(query: string): Promise<CucchiaioRecipe[]> {
+  console.log(`[searchRecipesFromApi] Searching for: ${query}`);
+  try {
+    const response = await fetch(
+      `https://crawlers.francescomeli.com/cucchiaio/recipes?page_size=-1&search=${encodeURIComponent(query)}&search_columns=name`,
+      {
+        headers: {
+          'accept': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[searchRecipesFromApi] Failed to fetch: ${response.status}`);
+      return [];
+    }
+
+    const data: CucchiaioApiResponse = await response.json();
+    console.log(`[searchRecipesFromApi] Found ${data.count} recipes`);
+    
+    return data.data || [];
+  } catch (error) {
+    console.error(`[searchRecipesFromApi] Error:`, error);
+    return [];
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -145,55 +148,29 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(
-      `https://www.giallozafferano.it/ajax/suggest.php?q=${encodeURIComponent(query)}`,
-      {
-        headers: {
-          'accept': '*/*',
-          'accept-language': 'en-US,en;q=0.9,it;q=0.8',
-          'cache-control': 'no-cache',
-          'pragma': 'no-cache',
-          'referer': 'https://www.giallozafferano.it/',
-          'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch suggestions');
+    // Fetch recipes from the Cucchiaio API
+    const recipes = await searchRecipesFromApi(query);
+    
+    if (recipes.length === 0) {
+      console.log(`[search-recipes] No recipes found for query: ${query}`);
+      return NextResponse.json([]);
     }
 
-    const data: GiallozafferanoSuggestion[] = await response.json();
+    console.log(`[search-recipes] Fetching images for ${recipes.length} recipes`);
     
-    console.log(`[search-recipes] Got ${data.length} suggestions from Giallozafferano`);
-    console.log(`[search-recipes] Search page URLs:`, data.map(d => d.url));
-    
-    // For each suggestion, fetch the search page and extract ALL recipes
-    const allRecipesNested = await Promise.all(
-      data.map(async (item, index) => {
-        console.log(`[search-recipes] Processing search page ${index}: ${item.url}`);
-        const recipes = await getRecipesFromSearchPage(item.url);
-        console.log(`[search-recipes] Search page ${index} returned ${recipes.length} recipes`);
-        return recipes;
+    // Fetch images for all recipes in parallel
+    const results = await Promise.all(
+      recipes.map(async (recipe) => {
+        const image = await extractImageFromRecipe(recipe.url);
+        return {
+          url: recipe.url,
+          term: recipe.name,
+          image,
+        };
       })
     );
 
-    // Flatten all recipes into a single array
-    const allRecipes = allRecipesNested.flat();
-    
-    // Remove duplicates by URL
-    const uniqueRecipes = allRecipes.filter((recipe, index, self) => 
-      index === self.findIndex(r => r.url === recipe.url)
-    );
-
-    console.log(`[search-recipes] Final results: ${uniqueRecipes.length} unique recipes from ${data.length} search pages`);
-    
-    // Return in the format expected by frontend
-    const results = uniqueRecipes.map(r => ({
-      url: r.url,
-      term: r.name,
-      image: r.image,
-    }));
+    console.log(`[search-recipes] Final results: ${results.length} recipes`);
     
     return NextResponse.json(results);
   } catch (error) {
