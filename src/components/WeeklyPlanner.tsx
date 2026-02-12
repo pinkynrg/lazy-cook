@@ -409,7 +409,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                     }}
                     style={{ cursor: 'pointer' }}
                   >
-                    + Aggiungi o trascina qui
+                    + Aggiungi
                   </div>
                 ) : (
                   <>
