@@ -1,11 +1,24 @@
 .onlineRecipeSearch {
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .onlineSearchInputWrapper {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 480px) {
+  .onlineSearchInputWrapper {
+    gap: 0.4rem;
+  }
+
+  .searchButton {
+    width: 44px !important;
+    height: 44px !important;
+  }
 }
 
 .searchButton {
@@ -36,10 +49,25 @@
 .onlineSearchResults {
   max-height: 400px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: grid;
   gap: 20px;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   padding: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .onlineSearchResults {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .onlineSearchResults {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .onlineSearchResultItem {

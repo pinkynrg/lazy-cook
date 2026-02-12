@@ -2435,6 +2435,7 @@ h2 {
 .recipe-modal-content {
   padding: 24px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -2448,6 +2449,24 @@ h2 {
 
 .recipe-modal-content .recipe-selector-section {
   max-height: 400px;
+}
+
+@media (max-width: 768px) {
+  .recipe-modal-backdrop {
+    padding: 8px;
+  }
+
+  .recipe-modal {
+    max-height: 90vh;
+  }
+
+  .recipe-modal-header {
+    padding: 16px;
+  }
+
+  .recipe-modal-content {
+    padding: 16px;
+  }
 }
 
 .pool-hint {
