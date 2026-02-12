@@ -223,11 +223,6 @@ export default function Home() {
   return (
     <div className="app-container">
       <main className="main-container">
-        <div className="page-header">
-          <h1><i className="bi bi-calendar-week"></i> Piano Pasti Settimanale</h1>
-          <p>Organizza i tuoi pasti per la settimana</p>
-        </div>
-
         <WeeklyPlanner 
           recipes={recipes} 
           onUpdateDay={updateRecipeDay}

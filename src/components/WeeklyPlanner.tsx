@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Recipe, RecipeDayAssignment } from '@/types/recipe';
+import OnlineRecipeSearch from '@/components/OnlineRecipeSearch/OnlineRecipeSearch';
 
 interface WeeklyPlannerProps {
   recipes: Recipe[];
@@ -42,9 +43,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<Array<{ url: string; term: string; image?: string }>>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [loadingRecipeUrl, setLoadingRecipeUrl] = useState<string | null>(null);
   const [pendingAssignment, setPendingAssignment] = useState<{ url: string; day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
   const [searchMode, setSearchMode] = useState<'local' | 'online'>('local');
 
@@ -67,7 +65,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
       }
     };
     loadEatingOutStatus();
-  }, [recipes]); // Reload when recipes change (e.g., after plan restore)
+  }, [recipes, onMealsOutChange]); // Reload when recipes change (e.g., after plan restore)
 
   // Handle pending assignment after recipe is added
   useEffect(() => {
@@ -82,9 +80,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
         onAddAssignment(newRecipe.id, pendingAssignment.day, pendingAssignment.meal);
         setSelectingRecipeFor(null);
         setRecipeSearchTerm('');
-        setSearchResults([]);
         setPendingAssignment(null);
-        setLoadingRecipeUrl(null);
       }
     }
   }, [recipes, pendingAssignment, onAddAssignment]);
@@ -160,25 +156,12 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
     return mealsOut.has(`${day}-${meal}`);
   };
 
-  const handleSearch = async () => {
-    if (recipeSearchTerm.length < 2) return;
+  const handleSelectSearchResult = async (result: { url: string; term: string; image?: string }) => {
+    if (!selectingRecipeFor) return;
     
-    setIsSearching(true);
-    try {
-      const response = await fetch(`/api/search-recipes?q=${encodeURIComponent(recipeSearchTerm)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-      }
-    } catch (err) {
-      console.error('Search error:', err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleSelectSearchResult = async (url: string, day: number, meal: 'breakfast' | 'lunch' | 'dinner') => {
-    setLoadingRecipeUrl(url);
+    const { url } = result;
+    const { day, meal } = selectingRecipeFor;
+    
     try {
       const response = await fetch('/api/extract-recipe', {
         method: 'POST',
@@ -189,7 +172,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
       if (!response.ok) {
         const errorData = await response.json();
         alert(errorData.error || 'Errore durante l\'estrazione della ricetta');
-        setLoadingRecipeUrl(null);
         return;
       }
 
@@ -209,10 +191,13 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
       
       // Add recipe to library - the useEffect will handle assignment once it appears in the list
       onAddRecipe(recipe);
+      
+      // Close modal
+      setSelectingRecipeFor(null);
+      setRecipeSearchTerm('');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore durante l\'estrazione della ricetta';
       alert(errorMessage);
-      setLoadingRecipeUrl(null);
     }
   };
 
@@ -357,7 +342,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
   const closeModal = () => {
     setSelectingRecipeFor(null);
     setRecipeSearchTerm('');
-    setSearchResults([]);
   };
 
   // Helper function to render a meal cell
@@ -376,7 +360,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                 onClick={() => {
                   setSelectingRecipeFor({ day: day.id, meal: mealType });
                   setRecipeSearchTerm('');
-                  setSearchResults([]);
                   setSearchMode(recipes.length > 0 ? 'local' : 'online');
                 }}
                 title="Aggiungi ricetta"
@@ -422,7 +405,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                     onClick={() => {
                       setSelectingRecipeFor({ day: day.id, meal: mealType });
                       setRecipeSearchTerm('');
-                      setSearchResults([]);
                       setSearchMode(recipes.length > 0 ? 'local' : 'online');
                     }}
                     style={{ cursor: 'pointer' }}
@@ -518,6 +500,10 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
           <span className="clear-week-text">Svuota settimana</span>
         </button>
       </div>
+
+      <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', paddingLeft: '0.5rem' }}>
+        Clicca su un giorno per assegnare ricette. Usa l'icona fuori a pranzo/cena per saltare un pasto.
+      </p>
 
       {/* Day Navigator for Mobile */}
       <div className="day-navigator">
@@ -633,78 +619,15 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
               </div>
 
               {searchMode === 'online' ? (
-                <>
-                  <div className="recipe-selector-header">
-                    <input
-                      type="text"
-                      placeholder="Cerca ricette online..."
-                      value={recipeSearchTerm}
-                      onChange={(e) => setRecipeSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="recipe-search-input"
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      onClick={handleSearch}
-                      disabled={isSearching || recipeSearchTerm.length < 2}
-                      title="Cerca ricette online"
-                    >
-                      {isSearching ? <i className="bi bi-hourglass-split"></i> : <i className="bi bi-search"></i>}
-                    </button>
-                  </div>
-                  
-                  {searchResults.length > 0 ? (
-                    <div className="recipe-selector-section">
-                      <div className="recipe-selector-list">
-                        {searchResults.map((result, index) => (
-                          <button
-                            key={index}
-                            className="recipe-selector-item-card"
-                            onClick={() => {
-                              handleSelectSearchResult(result.url, selectingRecipeFor.day, selectingRecipeFor.meal);
-                              closeModal();
-                            }}
-                            disabled={loadingRecipeUrl === result.url}
-                          >
-                            {loadingRecipeUrl === result.url ? (
-                              <div className="recipe-selector-loading">
-                                <i className="bi bi-hourglass-split"></i> Caricamento...
-                              </div>
-                            ) : (
-                              <>
-                                {result.image ? (
-                                  <>
-                                    <img src={result.image} alt={result.term} className="recipe-selector-card-image" />
-                                    <div className="recipe-selector-card-overlay"></div>
-                                    <span className="recipe-selector-card-title">{result.term}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <div className="recipe-selector-card-placeholder"></div>
-                                    <span className="recipe-selector-card-title">{result.term}</span>
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : recipeSearchTerm ? (
-                    <div className="recipe-selector-empty">
-                      <p style={{ color: 'var(--text-secondary)' }}>
-                        {isSearching ? 'Ricerca in corso...' : 'Nessun risultato. Prova con altri termini.'}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="recipe-selector-empty">
-                      <p style={{ color: 'var(--text-secondary)' }}>
-                        <i className="bi bi-search"></i> Cerca ricette da siti web
-                      </p>
-                    </div>
-                  )}
-                </>
+                <div className="recipe-selector-section">
+                  <OnlineRecipeSearch
+                    searchTerm={recipeSearchTerm}
+                    onSearchTermChange={setRecipeSearchTerm}
+                    onSelectRecipe={handleSelectSearchResult}
+                    placeholder="Cerca ricette online..."
+                    className="recipe-selector-online-search"
+                  />
+                </div>
               ) : (
                 <>
                   <input

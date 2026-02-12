@@ -112,11 +112,15 @@ function extractImageFromJsonLd(recipe: any): string | undefined {
 }
 
 // Fetch recipes from the Cucchiaio API
-async function searchRecipesFromApi(query: string): Promise<CucchiaioRecipe[]> {
-  console.log(`[searchRecipesFromApi] Searching for: ${query}`);
+async function searchRecipesFromApi(
+  query: string,
+  page: number = 1,
+  pageSize: number = 20
+): Promise<CucchiaioApiResponse> {
+  console.log(`[searchRecipesFromApi] Searching for: ${query}, page: ${page}, pageSize: ${pageSize}`);
   try {
     const response = await fetch(
-      `https://crawlers.francescomeli.com/cucchiaio/recipes?page_size=-1&search=${encodeURIComponent(query)}&search_columns=name`,
+      `https://crawlers.francescomeli.com/cucchiaio/recipes?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(query)}&search_columns=name`,
       {
         headers: {
           'accept': 'application/json',
@@ -126,41 +130,79 @@ async function searchRecipesFromApi(query: string): Promise<CucchiaioRecipe[]> {
 
     if (!response.ok) {
       console.log(`[searchRecipesFromApi] Failed to fetch: ${response.status}`);
-      return [];
+      return {
+        scraper: '',
+        table: '',
+        page: null,
+        page_size: pageSize,
+        total: 0,
+        count: 0,
+        search: query,
+        search_columns: ['name'],
+        data: [],
+      };
     }
 
     const data: CucchiaioApiResponse = await response.json();
-    console.log(`[searchRecipesFromApi] Found ${data.count} recipes`);
+    console.log(`[searchRecipesFromApi] Found ${data.count} recipes (total: ${data.total})`);
     
-    return data.data || [];
+    return data;
   } catch (error) {
     console.error(`[searchRecipesFromApi] Error:`, error);
-    return [];
+    return {
+      scraper: '',
+      table: '',
+      page: null,
+      page_size: pageSize,
+      total: 0,
+      count: 0,
+      search: query,
+      search_columns: ['name'],
+      data: [],
+    };
   }
 }
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('q');
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const pageSize = parseInt(searchParams.get('page_size') || '10', 10);
 
   if (!query || query.length < 2) {
-    return NextResponse.json([]);
+    return NextResponse.json({
+      results: [],
+      pagination: {
+        page: 1,
+        page_size: pageSize,
+        total: 0,
+        has_more: false,
+      },
+    });
   }
 
   try {
-    // Fetch recipes from the Cucchiaio API
-    const recipes = await searchRecipesFromApi(query);
+    // Fetch recipes from the Cucchiaio API with pagination
+    const apiResponse = await searchRecipesFromApi(query, page, pageSize);
     
-    if (recipes.length === 0) {
+    if (apiResponse.count === 0) {
       console.log(`[search-recipes] No recipes found for query: ${query}`);
-      return NextResponse.json([]);
+      return NextResponse.json({
+        results: [],
+        pagination: {
+          page,
+          page_size: pageSize,
+          total: 0,
+          has_more: false,
+        },
+      });
     }
 
-    console.log(`[search-recipes] Fetching images for ${recipes.length} recipes`);
+    console.log(`[search-recipes] Fetching images for ${apiResponse.data.length} recipes`);
     
-    // Fetch images for all recipes in parallel
+    // Fetch images for paginated recipes in parallel
     const results = await Promise.all(
-      recipes.map(async (recipe) => {
+      apiResponse.data.map(async (recipe) => {
         const image = await extractImageFromRecipe(recipe.url);
         return {
           url: recipe.url,
@@ -170,9 +212,19 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    console.log(`[search-recipes] Final results: ${results.length} recipes`);
+    const hasMore = (page * pageSize) < apiResponse.total;
+
+    console.log(`[search-recipes] Final results: ${results.length} recipes (page ${page}/${Math.ceil(apiResponse.total / pageSize)})`);
     
-    return NextResponse.json(results);
+    return NextResponse.json({
+      results,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total: apiResponse.total,
+        has_more: hasMore,
+      },
+    });
   } catch (error) {
     console.error('Error fetching recipe suggestions:', error);
     return NextResponse.json({ error: 'Failed to fetch suggestions' }, { status: 500 });

@@ -149,11 +149,9 @@ function buildSlots(settings: Settings | null): TaskSlot[] {
   return slots;
 }
 
-export default function FamilyTasksTable() {
+export default function FamilyTasksTable({ preset, onPresetChange }: { preset: RangePreset; onPresetChange: (preset: RangePreset) => void }) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [members, setMembers] = useState<HouseholdMember[]>([]);
-
-  const [preset, setPreset] = useState<RangePreset>('week');
 
   const [loading, setLoading] = useState(false);
   const [savingCell, setSavingCell] = useState<string | null>(null);
@@ -419,24 +417,6 @@ export default function FamilyTasksTable() {
 
   return (
     <section className={styles.wrapper}>
-      <div className={styles.header}>
-        <div>
-          <h2 className={styles.title}><i className="bi bi-calendar-week"></i> Task Familiari</h2>
-          <div className={styles.subtitle}>Compila e consulta chi ha fatto cosa, giorno per giorno.</div>
-        </div>
-
-        <div className={styles.controls}>
-          <label className={styles.control}>
-            <span>Periodo</span>
-            <select value={preset} onChange={(e) => setPreset(e.target.value as RangePreset)}>
-              <option value="week">Ultimi 7 giorni</option>
-              <option value="2weeks">Ultimi 14 giorni</option>
-              <option value="month">Ultimi 28 giorni</option>
-            </select>
-          </label>
-        </div>
-      </div>
-
       {slots.length > 0 && (
         <div className={styles.tableBlock}>
           <div className={styles.blockHeader}>

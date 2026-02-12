@@ -164,6 +164,10 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
         </div>
       </div>
 
+      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+        Ingredienti dal piano settimanale aggregati e normalizzati con AI per raggruppare articoli simili.
+      </p>
+
       {!hasRecipes ? (
         <div className="grocery-list">
           <p className="empty-state">Aggiungi ricette per generare la lista della spesa</p>

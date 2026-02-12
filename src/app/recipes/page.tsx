@@ -92,19 +92,15 @@ export default function RecipesPage() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1><i className="bi bi-book"></i> Le Mie Ricette</h1>
-        <p>Gestisci la tua collezione di ricette</p>
-      </div>
-
       <div className="page-content">
         <section className="recipes-section">
           <div className="section-header">
-            <h2>
-              Aggiungi Nuova Ricetta
-            </h2>
+            <h2><i className="bi bi-plus-circle"></i> Aggiungi Nuova Ricetta</h2>
           </div>
 
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Cerca online, inserisci un URL o crea manualmente
+          </p>
 
           <div className="section-content">
             <RecipeForm onAddRecipe={addRecipe}/>
@@ -113,8 +109,12 @@ export default function RecipesPage() {
 
         <section className="recipes-section">
           <div className="section-header">
-            <h2>Raccolta Ricette ({recipes.length})</h2>
+            <h2><i className="bi bi-book"></i> Raccolta Ricette ({recipes.length})</h2>
           </div>
+
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Tutte le tue ricette salvate. Clicca per visualizzare dettagli o assegnale al piano settimanale.
+          </p>
 
           <div className="recipes-grid">
             {recipes.length === 0 ? (

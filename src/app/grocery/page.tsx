@@ -416,11 +416,6 @@ export default function GroceryPage() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1><i className="bi bi-cart"></i> Lista della Spesa</h1>
-        <p>Ingredienti necessari per il tuo piano settimanale</p>
-      </div>
-
       <div className="page-content">
         <GroceryList
           isNormalized={isNormalized}

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import type { Recipe, JsonLdRecipe } from '@/types/recipe';
-import { createSyntheticJsonLd, parseInstructions } from '@/lib/recipeParser';
+import { createSyntheticJsonLd } from '@/lib/recipeParser';
+import OnlineRecipeSearch from '@/components/OnlineRecipeSearch/OnlineRecipeSearch';
 
 interface SearchSuggestion {
   url: string;
@@ -24,10 +25,6 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
   
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchSuggestion[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
   
   // Manual form fields
   const [manualName, setManualName] = useState('');
@@ -36,45 +33,6 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
   const [manualPrepTime, setManualPrepTime] = useState('');
   const [manualImage, setManualImage] = useState('');
   const [manualInstructions, setManualInstructions] = useState('');
-
-  // Manual search function triggered by button click
-  const handleSearch = async () => {
-    if (searchQuery.length < 2) {
-      setError('Inserisci almeno 2 caratteri');
-      return;
-    }
-
-    setIsSearching(true);
-    setError('');
-    try {
-      const response = await fetch(`/api/search-recipes?q=${encodeURIComponent(searchQuery)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-        setShowResults(true);
-        if (data.length === 0) {
-          setError('Nessuna ricetta trovata');
-        }
-      }
-    } catch (err) {
-      console.error('Search error:', err);
-      setError('Errore durante la ricerca');
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const addRecipeFromJsonLd = (jsonld: JsonLdRecipe) => {
     const recipe: Recipe = {
@@ -89,9 +47,7 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
   };
 
   const handleSelectRecipe = async (suggestion: SearchSuggestion) => {
-    setShowResults(false);
     setSearchQuery('');
-    setSearchResults([]);
     setLoading(true);
     setError('');
 
@@ -116,8 +72,8 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
         recipe.url = suggestion.url;
       }
       addRecipeFromJsonLd(recipe);
-    } catch (err: any) {
-      setError(err.message || 'Errore durante l\'estrazione della ricetta');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante l\'estrazione della ricetta');
     } finally {
       setLoading(false);
     }
@@ -202,8 +158,8 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
           recipe.url = url;
         }
         addRecipeFromJsonLd(recipe);
-      } catch (err: any) {
-        setError(err.message || 'Errore durante l\'estrazione della ricetta');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Errore durante l\'estrazione della ricetta');
       } finally {
         setLoading(false);
       }
@@ -304,54 +260,13 @@ export default function RecipeForm({ onAddRecipe }: RecipeFormProps) {
           </button>
         </div>
       ) : formMode === 'search' ? (
-        <div className="search-form" ref={searchRef}>
-          <div className="search-input-wrapper">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Cerca ricetta..."
-              className="recipe-input"
-              disabled={loading || isSearching}
-              onFocus={() => searchResults.length > 0 && setShowResults(true)}
-            />
-            <button
-              type="button"
-              className="btn btn-primary btn-search"
-              onClick={handleSearch}
-              disabled={loading || isSearching}
-            >
-              {isSearching ? <i className="bi bi-hourglass-split"></i> : <i className="bi bi-search"></i>}
-            </button>
-          </div>
-          
-          {showResults && searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map((result, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  className="search-result-item"
-                  onClick={() => handleSelectRecipe(result)}
-                  disabled={loading}
-                >
-                  {result.image ? (
-                    <img 
-                      src={result.image} 
-                      alt={result.term}
-                      className="search-result-image"
-                    />
-                  ) : (
-                    <div className="search-result-placeholder">
-                      <i className="bi bi-journal-text"></i>
-                    </div>
-                  )}
-                  <span className="search-result-term">{result.term}</span>
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="search-form">
+          <OnlineRecipeSearch
+            searchTerm={searchQuery}
+            onSearchTermChange={setSearchQuery}
+            onSelectRecipe={handleSelectRecipe}
+            placeholder="Cerca ricetta..."
+          />
           
           {loading && (
             <div className="loading-message">

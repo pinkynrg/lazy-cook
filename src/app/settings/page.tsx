@@ -132,12 +132,15 @@ export default function SettingsPage() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1><i className="bi bi-gear"></i> Impostazioni</h1>
-        <p>Configura le preferenze per il tuo piano pasti</p>
-      </div>
-
-      <div className={`page-content ${styles.pageContentPad}`}>
+      <section className="page-content">
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <i className="bi bi-gear"></i> Impostazioni
+          </h1>
+          <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
+            Configura famiglia, pasti abilitati e gestisci il tuo household condiviso.
+          </p>
+        </div>
         <div className="settings-grid">
           <div className="setting-card full-width">
             <div className="setting-header">
@@ -291,7 +294,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
