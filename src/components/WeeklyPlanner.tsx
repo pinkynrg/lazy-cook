@@ -566,7 +566,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
             >
               <div className="day-name">{day.name}</div>
               <button className="day-toggle-btn" type="button">
-                {expandedDay === day.id ? '▼' : '▶'}
+                <i className={`bi bi-chevron-${expandedDay === day.id ? 'down' : 'right'}`}></i>
               </button>
             </div>
             

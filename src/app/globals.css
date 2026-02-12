@@ -508,6 +508,10 @@ section {
   border-radius: 12px;
 }
 
+.tasks-content {
+  padding: 12px;
+}
+
 h2 {
   margin-bottom: 20px;
   color: var(--text-primary);
@@ -1224,6 +1228,35 @@ h2 {
   overflow-y: auto;
 }
 
+@media (max-width: 480px) {
+  .modal-overlay {
+    background: white;
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--card-bg);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+}
+
 .ingredient-total {
   padding: 16px;
   background: #ede9fe;
@@ -1336,6 +1369,31 @@ h2 {
 
 .close:hover {
   color: #000;
+}
+
+@media (max-width: 480px) {
+  .modal {
+    background-color: white;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--card-bg);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
 }
 
 .ingredient-list {
@@ -1729,7 +1787,7 @@ h2 {
   }
   
   .day-header-mobile {
-    padding: 14px 12px;
+    padding: 16px 14px;
     border: 1px solid var(--border);
     border-radius: 12px 12px 0 0;
     box-shadow: none;
@@ -1737,6 +1795,7 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   }
   
   .day-column-mobile.collapsed .day-header-mobile {
@@ -1751,15 +1810,31 @@ h2 {
   }
   
   .day-toggle-btn {
-    display: block;
-    background: none;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
     border: none;
-    color: white;
-    font-size: 1.1rem;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 1.3rem;
     cursor: pointer;
-    padding: 4px 8px;
-    transition: transform 0.3s ease;
+    padding: 6px;
+    transition: all 0.2s ease;
     line-height: 1;
+    min-width: 32px;
+    min-height: 32px;
+    flex-shrink: 0;
+  }
+
+  .day-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-primary);
+  }
+
+  .day-toggle-btn i {
+    display: block;
+    transition: transform 0.3s ease;
   }
   
   .day-column-mobile .meal-cell {
@@ -1884,9 +1959,21 @@ h2 {
   }
 
   .day-toggle-btn {
-    display: block;
-    color: white;
-    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    background: rgba(var(--primary-rgb), 0.1);
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    border-radius: 6px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 8px;
+  }
+
+  .day-toggle-btn i {
+    transition: transform 0.3s ease;
   }
 
   .day-name {
@@ -2462,6 +2549,37 @@ h2 {
 
   .recipe-modal-header {
     padding: 16px;
+  }
+
+  .recipe-modal-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recipe-modal-backdrop {
+    padding: 0;
+    background: white;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .recipe-modal {
+    max-width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .recipe-modal-header {
+    padding: 16px;
+    background: var(--card-bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: var(--shadow);
   }
 
   .recipe-modal-content {
@@ -4153,6 +4271,25 @@ h2 {
   .page-container {
     margin: 90px auto 20px;
     padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    margin: 70px auto 0;
+    padding: 0;
+  }
+
+  .page-content {
+    border-radius: 0;
+  }
+
+  section {
+    border-radius: 0;
+  }
+
+  .weekly-planner {
+    border-radius: 0;
   }
 }
 

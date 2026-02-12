@@ -221,26 +221,24 @@ export default function Home() {
   };
 
   return (
-    <div className="app-container">
-      <main className="main-container">
-        <WeeklyPlanner 
-          recipes={recipes} 
-          onUpdateDay={updateRecipeDay}
-          onViewRecipe={setSelectedRecipe}
-          onRemoveRecipe={removeRecipe}
-          onUpdateServings={updateRecipeServings}
-          onAddAssignment={addRecipeAssignment}
-          onRemoveAssignment={removeRecipeAssignment}
-          onUpdateAssignmentServings={updateAssignmentServings}
-          onMoveAssignment={moveAssignment}
-          onAddRecipe={addRecipe}
-          onClearWeek={clearWeek}
-          enableBreakfast={enableBreakfast}
-          enableLunch={enableLunch}
-          enableDinner={enableDinner}
-          onMealsOutChange={() => {}}
-        />
-      </main>
+    <div className="page-container">
+      <WeeklyPlanner 
+        recipes={recipes} 
+        onUpdateDay={updateRecipeDay}
+        onViewRecipe={setSelectedRecipe}
+        onRemoveRecipe={removeRecipe}
+        onUpdateServings={updateRecipeServings}
+        onAddAssignment={addRecipeAssignment}
+        onRemoveAssignment={removeRecipeAssignment}
+        onUpdateAssignmentServings={updateAssignmentServings}
+        onMoveAssignment={moveAssignment}
+        onAddRecipe={addRecipe}
+        onClearWeek={clearWeek}
+        enableBreakfast={enableBreakfast}
+        enableLunch={enableLunch}
+        enableDinner={enableDinner}
+        onMealsOutChange={() => {}}
+      />
 
       {selectedRecipe && (
         <RecipeModal

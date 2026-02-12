@@ -11,7 +11,7 @@ export default function TasksPage() {
 
   return (
     <div className="page-container">
-      <section className="page-content">
+      <section className="page-content tasks-content">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
           <div>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
