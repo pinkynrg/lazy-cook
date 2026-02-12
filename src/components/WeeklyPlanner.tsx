@@ -33,9 +33,7 @@ const DAYS = [
 
 type MealOutKey = `${number}-${'breakfast' | 'lunch' | 'dinner'}`;
 
-export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRemoveRecipe, onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner, onMealsOutChange }: WeeklyPlannerProps) {
-  const [editingServingsId, setEditingServingsId] = useState<number | null>(null);
-  const [servingsInput, setServingsInput] = useState('');
+export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onViewRecipe, onRemoveRecipe: _onRemoveRecipe, onUpdateServings: _onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner, onMealsOutChange }: WeeklyPlannerProps) {
   const [selectingRecipeFor, setSelectingRecipeFor] = useState<{ day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
   const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
   const [assignmentServingsInput, setAssignmentServingsInput] = useState('');
@@ -43,6 +41,12 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
   const [mealsOut, setMealsOut] = useState<Set<MealOutKey>>(new Set());
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ url: string; term: string; image?: string }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [loadingRecipeUrl, setLoadingRecipeUrl] = useState<string | null>(null);
+  const [pendingAssignment, setPendingAssignment] = useState<{ url: string; day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
+  const [searchMode, setSearchMode] = useState<'local' | 'online'>('local');
 
   // Load eating out status from database on mount and when recipes change
   useEffect(() => {
@@ -64,6 +68,26 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     };
     loadEatingOutStatus();
   }, [recipes]); // Reload when recipes change (e.g., after plan restore)
+
+  // Handle pending assignment after recipe is added
+  useEffect(() => {
+    if (pendingAssignment) {
+      // Find the recipe that was just added by matching URL
+      const newRecipe = recipes.find(r => 
+        r.jsonldSource?.url === pendingAssignment.url
+      );
+      
+      if (newRecipe) {
+        // Recipe found, assign it
+        onAddAssignment(newRecipe.id, pendingAssignment.day, pendingAssignment.meal);
+        setSelectingRecipeFor(null);
+        setRecipeSearchTerm('');
+        setSearchResults([]);
+        setPendingAssignment(null);
+        setLoadingRecipeUrl(null);
+      }
+    }
+  }, [recipes, pendingAssignment, onAddAssignment]);
 
   const toggleMealOut = async (day: number, meal: 'breakfast' | 'lunch' | 'dinner') => {
     const key: MealOutKey = `${day}-${meal}`;
@@ -136,6 +160,62 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     return mealsOut.has(`${day}-${meal}`);
   };
 
+  const handleSearch = async () => {
+    if (recipeSearchTerm.length < 2) return;
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/search-recipes?q=${encodeURIComponent(recipeSearchTerm)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectSearchResult = async (url: string, day: number, meal: 'breakfast' | 'lunch' | 'dinner') => {
+    setLoadingRecipeUrl(url);
+    try {
+      const response = await fetch('/api/extract-recipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.error || 'Errore durante l\'estrazione della ricetta');
+        setLoadingRecipeUrl(null);
+        return;
+      }
+
+      const { recipe: jsonld } = await response.json();
+      if (!jsonld.url && !jsonld['@id']) {
+        jsonld.url = url;
+      }
+      
+      const recipe = {
+        id: Date.now(),
+        jsonldSource: jsonld,
+        dateAdded: new Date().toISOString(),
+      };
+      
+      // Set pending assignment before adding recipe
+      setPendingAssignment({ url, day, meal });
+      
+      // Add recipe to library - the useEffect will handle assignment once it appears in the list
+      onAddRecipe(recipe);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Errore durante l\'estrazione della ricetta';
+      alert(errorMessage);
+      setLoadingRecipeUrl(null);
+    }
+  };
+
   const scrollToDay = (dayId: number) => {
     setExpandedDay(dayId);
     setTimeout(() => {
@@ -166,7 +246,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, recipeId: number) => {
+  const _handleDragStart = (e: React.DragEvent, recipeId: number) => {
     e.dataTransfer.setData('recipeId', recipeId.toString());
     e.dataTransfer.effectAllowed = 'copy';
     setIsDragging(true);
@@ -238,22 +318,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     }
   };
 
-  const startEditingServings = (recipe: Recipe, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingServingsId(recipe.id);
-    setServingsInput(recipe.servings || '');
-  };
-
-  const saveServings = (recipeId: number) => {
-    onUpdateServings(recipeId, servingsInput);
-    setEditingServingsId(null);
-  };
-
-  const cancelEditingServings = () => {
-    setEditingServingsId(null);
-    setServingsInput('');
-  };
-
   const startEditingAssignmentServings = (assignment: RecipeDayAssignment, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingAssignmentId(assignment.id);
@@ -290,7 +354,11 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
     return dayAssignments;
   };
 
-  const unassignedRecipes = recipes;
+  const closeModal = () => {
+    setSelectingRecipeFor(null);
+    setRecipeSearchTerm('');
+    setSearchResults([]);
+  };
 
   // Helper function to render a meal cell
   const renderMealCell = (day: typeof DAYS[0], mealType: 'breakfast' | 'lunch' | 'dinner') => {
@@ -305,17 +373,18 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
             {!isMealOut(day.id, mealType) && (
               <button 
                 className="meal-add-btn-header"
-                onClick={() => setSelectingRecipeFor(
-                  selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType 
-                    ? null 
-                    : { day: day.id, meal: mealType }
-                )}
+                onClick={() => {
+                  setSelectingRecipeFor({ day: day.id, meal: mealType });
+                  setRecipeSearchTerm('');
+                  setSearchResults([]);
+                  setSearchMode(recipes.length > 0 ? 'local' : 'online');
+                }}
                 title="Aggiungi ricetta"
               >
-                {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType ? <i className="bi bi-x"></i> : '+'}
+                +
               </button>
             )}
-            {!isMealOut(day.id, mealType) && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) && (
+            {!isMealOut(day.id, mealType) && (
               <button 
                 className={`meal-out-btn ${isMealOut(day.id, mealType) ? 'active' : ''}`}
                 onClick={() => toggleMealOut(day.id, mealType)}
@@ -342,39 +411,25 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
             <span>Mangiamo fuori</span>
           </div>
         ) : (
-          <>
-            {selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType && (
-              <div className="recipe-selector">
-                {recipes.map(recipe => (
-                  <button
-                    key={recipe.id}
-                    className="recipe-selector-item"
-                    onClick={() => {
-                      onAddAssignment(recipe.id, day.id, mealType);
-                      setSelectingRecipeFor(null);
-                    }}
-                  >
-                    {recipe.name}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {!(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) && (
-              <div 
-                className="meal-recipes"
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, day.id, mealType)}
-              >
-                {mealRecipes.length === 0 && !(selectingRecipeFor?.day === day.id && selectingRecipeFor?.meal === mealType) ? (
+          <div 
+            className="meal-recipes"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, day.id, mealType)}
+          >
+                {mealRecipes.length === 0 ? (
                   <div 
                     className="empty-meal"
-                    onClick={() => setSelectingRecipeFor({ day: day.id, meal: mealType })}
+                    onClick={() => {
+                      setSelectingRecipeFor({ day: day.id, meal: mealType });
+                      setRecipeSearchTerm('');
+                      setSearchResults([]);
+                      setSearchMode(recipes.length > 0 ? 'local' : 'online');
+                    }}
                     style={{ cursor: 'pointer' }}
                   >
                     + Aggiungi o trascina qui
                   </div>
-                ) : mealRecipes.length === 0 ? null : (
+                ) : (
                   <>
                     {mealRecipes.map(({ assignment, recipe }) => (
                       <div
@@ -408,7 +463,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                                 onChange={(e) => setAssignmentServingsInput(e.target.value)}
                                 placeholder="es. 4"
                                 className="servings-input"
-                                autoFocus
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') saveAssignmentServings(assignment.id);
                                   if (e.key === 'Escape') cancelEditingAssignmentServings();
@@ -442,8 +496,6 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
                   </>
                 )}
               </div>
-            )}
-          </>
         )}
       </div>
     );
@@ -547,6 +599,176 @@ export default function WeeklyPlanner({ recipes, onUpdateDay, onViewRecipe, onRe
           </div>
         ))}
       </div>
+
+      {/* Recipe Selector Modal */}
+      {selectingRecipeFor && (
+        <div className="recipe-modal-backdrop" onClick={closeModal}>
+          <div className="recipe-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="recipe-modal-header">
+              <h3>
+                Aggiungi ricetta - {DAYS[selectingRecipeFor.day].name} {' '}
+                {selectingRecipeFor.meal === 'breakfast' ? 'Colazione' : selectingRecipeFor.meal === 'lunch' ? 'Pranzo' : 'Cena'}
+              </h3>
+              <button className="recipe-modal-close" onClick={closeModal}>
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            
+            <div className="recipe-modal-content">
+              <div className="recipe-selector-tabs">
+                <button
+                  type="button"
+                  className={`recipe-selector-tab ${searchMode === 'local' ? 'active' : ''}`}
+                  onClick={() => setSearchMode('local')}
+                >
+                  <i className="bi bi-book"></i> Le tue ricette
+                </button>
+                <button
+                  type="button"
+                  className={`recipe-selector-tab ${searchMode === 'online' ? 'active' : ''}`}
+                  onClick={() => setSearchMode('online')}
+                >
+                  <i className="bi bi-search"></i> Cerca online
+                </button>
+              </div>
+
+              {searchMode === 'online' ? (
+                <>
+                  <div className="recipe-selector-header">
+                    <input
+                      type="text"
+                      placeholder="Cerca ricette online..."
+                      value={recipeSearchTerm}
+                      onChange={(e) => setRecipeSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      className="recipe-search-input"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={handleSearch}
+                      disabled={isSearching || recipeSearchTerm.length < 2}
+                      title="Cerca ricette online"
+                    >
+                      {isSearching ? <i className="bi bi-hourglass-split"></i> : <i className="bi bi-search"></i>}
+                    </button>
+                  </div>
+                  
+                  {searchResults.length > 0 ? (
+                    <div className="recipe-selector-section">
+                      <div className="recipe-selector-list">
+                        {searchResults.map((result, index) => (
+                          <button
+                            key={index}
+                            className="recipe-selector-item-card"
+                            onClick={() => {
+                              handleSelectSearchResult(result.url, selectingRecipeFor.day, selectingRecipeFor.meal);
+                              closeModal();
+                            }}
+                            disabled={loadingRecipeUrl === result.url}
+                          >
+                            {loadingRecipeUrl === result.url ? (
+                              <div className="recipe-selector-loading">
+                                <i className="bi bi-hourglass-split"></i> Caricamento...
+                              </div>
+                            ) : (
+                              <>
+                                {result.image ? (
+                                  <>
+                                    <img src={result.image} alt={result.term} className="recipe-selector-card-image" />
+                                    <div className="recipe-selector-card-overlay"></div>
+                                    <span className="recipe-selector-card-title">{result.term}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="recipe-selector-card-placeholder"></div>
+                                    <span className="recipe-selector-card-title">{result.term}</span>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : recipeSearchTerm ? (
+                    <div className="recipe-selector-empty">
+                      <p style={{ color: 'var(--text-secondary)' }}>
+                        {isSearching ? 'Ricerca in corso...' : 'Nessun risultato. Prova con altri termini.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="recipe-selector-empty">
+                      <p style={{ color: 'var(--text-secondary)' }}>
+                        <i className="bi bi-search"></i> Cerca ricette da siti web
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Filtra le tue ricette..."
+                    value={recipeSearchTerm}
+                    onChange={(e) => setRecipeSearchTerm(e.target.value)}
+                    className="recipe-search-input"
+                  />
+                  
+                  {recipes.length > 0 ? (
+                    <div className="recipe-selector-section">
+                      <div className="recipe-selector-list">
+                        {recipes
+                          .filter(recipe => 
+                            !recipeSearchTerm || (recipe.name && recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                          )
+                          .map(recipe => (
+                            <button
+                              key={recipe.id}
+                              className="recipe-selector-item-card"
+                              onClick={() => {
+                                onAddAssignment(recipe.id, selectingRecipeFor.day, selectingRecipeFor.meal);
+                                closeModal();
+                              }}
+                            >
+                              {recipe.image ? (
+                                <>
+                                  <img src={recipe.image} alt={recipe.name} className="recipe-selector-card-image" />
+                                  <div className="recipe-selector-card-overlay"></div>
+                                  <span className="recipe-selector-card-title">{recipe.name}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="recipe-selector-card-placeholder"></div>
+                                  <span className="recipe-selector-card-title">{recipe.name}</span>
+                                </>
+                              )}
+                            </button>
+                          ))}
+                        {recipes.filter(recipe => 
+                          !recipeSearchTerm || (recipe.name && recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                        ).length === 0 && recipeSearchTerm && (
+                          <div className="recipe-selector-empty">
+                            <p style={{ color: 'var(--text-secondary)' }}>
+                              Nessuna ricetta trovata per &quot;{recipeSearchTerm}&quot;
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="recipe-selector-empty">
+                      <p style={{ color: 'var(--text-secondary)' }}>
+                        <i className="bi bi-info-circle"></i> Non hai ancora ricette
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
