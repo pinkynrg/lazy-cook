@@ -36,6 +36,7 @@ export interface Settings {
   enableLunch: boolean;
   enableDinner: boolean;
   currentPlanName?: string;
+  enableFamilyTasks?: boolean;
 
   // Which meals usually require cooking / dishes.
   // Used to decide which task columns are relevant.

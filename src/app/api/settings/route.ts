@@ -22,13 +22,14 @@ export async function GET() {
           enableLunch,
           enableDinner,
           currentPlanName,
+          enableFamilyTasks,
           cookBreakfast,
           cookLunch,
           cookDinner,
           cleanBreakfast,
           cleanLunch,
           cleanDinner
-        ) VALUES (?, 2, 0, 1, 1, ?, 0, 1, 1, 0, 1, 1)
+        ) VALUES (?, 2, 0, 1, 1, ?, 1, 0, 1, 1, 0, 1, 1)
       `).run(session.householdId, 'Piano Settimanale');
       return NextResponse.json({ 
         familySize: 2,
@@ -36,6 +37,7 @@ export async function GET() {
         enableLunch: true,
         enableDinner: true,
         currentPlanName: 'Piano Settimanale',
+        enableFamilyTasks: true,
         cookBreakfast: false,
         cookLunch: true,
         cookDinner: true,
@@ -51,6 +53,7 @@ export async function GET() {
       enableLunch: !!settings.enableLunch,
       enableDinner: !!settings.enableDinner,
       currentPlanName: settings.currentPlanName || 'Piano Settimanale',
+      enableFamilyTasks: settings.enableFamilyTasks !== undefined ? !!settings.enableFamilyTasks : true,
       cookBreakfast: !!settings.cookBreakfast,
       cookLunch: !!settings.cookLunch,
       cookDinner: !!settings.cookDinner,
@@ -89,6 +92,7 @@ async function updateSettings(request: NextRequest) {
       enableLunch,
       enableDinner,
       currentPlanName,
+      enableFamilyTasks,
       cookBreakfast,
       cookLunch,
       cookDinner,
@@ -127,6 +131,10 @@ async function updateSettings(request: NextRequest) {
     if (currentPlanName !== undefined) {
       updates.push('currentPlanName = ?');
       params.push(currentPlanName);
+    }
+    if (enableFamilyTasks !== undefined) {
+      updates.push('enableFamilyTasks = ?');
+      params.push(enableFamilyTasks ? 1 : 0);
     }
 
     if (cookBreakfast !== undefined) {

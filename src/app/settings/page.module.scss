@@ -11,7 +11,7 @@
   text-align: center;
 
   h1 {
-    font-size: 2.5rem;
+    font-size: var(--font-2xl);
     color: var(--primary-color);
     margin-bottom: 10px;
     display: flex;
@@ -35,35 +35,32 @@
   padding: 24px;
 }
 
-.nicknameRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items: center;
-}
-
 .nicknameInput {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: var(--input-padding);
+  border-radius: 8px;
   border: 1px solid var(--border);
   background: white;
   color: var(--text-primary);
-  font-weight: 700;
+  font-size: var(--font-base);
+  transition: all 0.2s ease;
+}
+
+.nicknameInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .nicknameHint {
   margin-top: 8px;
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
   color: var(--text-secondary);
+  font-style: italic;
 }
 
 @media (max-width: 480px) {
   .pageContentPad {
     padding: 12px;
-  }
-
-  .nicknameRow {
-    grid-template-columns: 1fr;
   }
 }

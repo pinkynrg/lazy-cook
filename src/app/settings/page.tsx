@@ -7,14 +7,16 @@ import styles from './page.module.scss';
 
 export default function SettingsPage() {
   const [nickname, setNickname] = useState('');
-  const [nicknameSaving, setNicknameSaving] = useState(false);
-  const [nicknameSaved, setNicknameSaved] = useState(false);
+  const [initialNickname, setInitialNickname] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const [familySize, setFamilySize] = useState(2);
   const [enableBreakfast, setEnableBreakfast] = useState(false);
   const [enableLunch, setEnableLunch] = useState(true);
   const [enableDinner, setEnableDinner] = useState(true);
   const [currentPlanName, setCurrentPlanName] = useState('Piano Settimanale');
+  const [enableFamilyTasks, setEnableFamilyTasks] = useState(true);
 
   const [cookBreakfast, setCookBreakfast] = useState(false);
   const [cookLunch, setCookLunch] = useState(true);
@@ -34,31 +36,40 @@ export default function SettingsPage() {
       if (!res.ok) return;
       const data = await res.json();
       const nick = data?.user?.nickname;
-      setNickname(typeof nick === 'string' ? nick : '');
+      const nicknameValue = typeof nick === 'string' ? nick : '';
+      setNickname(nicknameValue);
+      setInitialNickname(nicknameValue);
     } catch {
       // ignore
     }
   };
 
-  const saveNickname = async () => {
-    setNicknameSaving(true);
-    setNicknameSaved(false);
+  const showSuccessToast = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const saveNickname = async (value: string) => {
+    // Only save if value has changed
+    if (value === initialNickname) return;
+    
     try {
       const res = await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname }),
+        body: JSON.stringify({ nickname: value }),
       });
       if (res.ok) {
-        setNicknameSaved(true);
-        // In case backend trims
         const data = await res.json().catch(() => null);
         const saved = data?.nickname;
-        setNickname(typeof saved === 'string' ? saved : '');
+        const savedValue = typeof saved === 'string' ? saved : '';
+        setNickname(savedValue);
+        setInitialNickname(savedValue);
+        showSuccessToast('Nickname salvato');
       }
-    } finally {
-      setNicknameSaving(false);
-      window.setTimeout(() => setNicknameSaved(false), 1500);
+    } catch (error) {
+      console.error('Error saving nickname:', error);
     }
   };
 
@@ -72,6 +83,7 @@ export default function SettingsPage() {
         setEnableLunch(data.enableLunch);
         setEnableDinner(data.enableDinner);
         setCurrentPlanName(data.currentPlanName || 'Piano Settimanale');
+        setEnableFamilyTasks(data.enableFamilyTasks !== undefined ? data.enableFamilyTasks : true);
 
         setCookBreakfast(!!data.cookBreakfast);
         setCookLunch(data.cookLunch !== undefined ? !!data.cookLunch : true);
@@ -92,6 +104,7 @@ export default function SettingsPage() {
       enableLunch,
       enableDinner,
       currentPlanName,
+      enableFamilyTasks,
       cookBreakfast,
       cookLunch,
       cookDinner,
@@ -106,6 +119,7 @@ export default function SettingsPage() {
     if (updates.enableLunch !== undefined) setEnableLunch(updates.enableLunch);
     if (updates.enableDinner !== undefined) setEnableDinner(updates.enableDinner);
     if (updates.currentPlanName !== undefined) setCurrentPlanName(updates.currentPlanName);
+    if (updates.enableFamilyTasks !== undefined) setEnableFamilyTasks(updates.enableFamilyTasks);
 
     if (updates.cookBreakfast !== undefined) setCookBreakfast(!!updates.cookBreakfast);
     if (updates.cookLunch !== undefined) setCookLunch(!!updates.cookLunch);
@@ -120,6 +134,10 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSettings),
       });
+      showSuccessToast('Impostazioni salvate');
+      
+      // Notify other components that settings have been updated
+      window.dispatchEvent(new Event('settingsUpdated'));
     } catch (error) {
       console.error('Error saving settings:', error);
     }
@@ -152,22 +170,14 @@ export default function SettingsPage() {
                 Imposta un nickname (facoltativo) che verrà mostrato al posto dell’email nelle liste e nei task.
               </p>
 
-              <div className={styles.nicknameRow}>
-                <input
-                  className={styles.nicknameInput}
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="Es. Fra"
-                  maxLength={32}
-                />
-                <button
-                  className="btn btn-outline"
-                  onClick={saveNickname}
-                  disabled={nicknameSaving}
-                >
-                  {nicknameSaving ? 'Salvataggio…' : (nicknameSaved ? 'Salvato' : 'Salva')}
-                </button>
-              </div>
+              <input
+                className={styles.nicknameInput}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                onBlur={(e) => saveNickname(e.target.value)}
+                placeholder="Il tuo nickname"
+                maxLength={32}
+              />
               <div className={styles.nicknameHint}>Lascia vuoto per usare l’email.</div>
             </div>
           </div>
@@ -244,39 +254,55 @@ export default function SettingsPage() {
             </div>
             <div className="setting-body">
               <p className="setting-description">
-                Seleziona quando di solito si cucina e quando di solito si lavano i piatti.
-                Queste opzioni controllano quali colonne compaiono nella tabella dei task.
+                Disabilita i task familiari se sei da solo e non hai bisogno di tracciare chi fa cosa.
               </p>
+              <label className="meal-toggle-item" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={enableFamilyTasks}
+                  onChange={(e) => updateSettings({ enableFamilyTasks: e.target.checked })}
+                />
+                <span>Mostra Task Familiari</span>
+              </label>
 
-              <div className="meal-toggles-vertical" style={{ gap: 12 }}>
-                <div style={{ fontWeight: 700, marginTop: 4 }}>Quando si cucina</div>
-                <label className="meal-toggle-item">
-                  <input type="checkbox" checked={cookBreakfast} onChange={(e) => updateSettings({ cookBreakfast: e.target.checked })} />
-                  <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
-                </label>
-                <label className="meal-toggle-item">
-                  <input type="checkbox" checked={cookLunch} onChange={(e) => updateSettings({ cookLunch: e.target.checked })} />
-                  <span><i className="bi bi-sun-fill"></i> Pranzo</span>
-                </label>
-                <label className="meal-toggle-item">
-                  <input type="checkbox" checked={cookDinner} onChange={(e) => updateSettings({ cookDinner: e.target.checked })} />
-                  <span><i className="bi bi-moon-fill"></i> Cena</span>
-                </label>
+              {enableFamilyTasks && (
+                <>
+                  <div style={{ marginTop: '1.5rem', marginBottom: '0.75rem', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
+                    Seleziona quando di solito si cucina e quando di solito si lavano i piatti.
+                    Queste opzioni controllano quali colonne compaiono nella tabella dei task.
+                  </div>
 
-                <div style={{ fontWeight: 700, marginTop: 10 }}>Quando si lavano i piatti</div>
-                <label className="meal-toggle-item">
-                  <input type="checkbox" checked={cleanBreakfast} onChange={(e) => updateSettings({ cleanBreakfast: e.target.checked })} />
-                  <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
-                </label>
-                <label className="meal-toggle-item">
-                  <input type="checkbox" checked={cleanLunch} onChange={(e) => updateSettings({ cleanLunch: e.target.checked })} />
-                  <span><i className="bi bi-sun-fill"></i> Pranzo</span>
-                </label>
-                <label className="meal-toggle-item">
-                  <input type="checkbox" checked={cleanDinner} onChange={(e) => updateSettings({ cleanDinner: e.target.checked })} />
-                  <span><i className="bi bi-moon-fill"></i> Cena</span>
-                </label>
-              </div>
+                  <div className="meal-toggles-vertical" style={{ gap: 12 }}>
+                    <div style={{ fontWeight: 700, marginTop: 4 }}>Quando si cucina</div>
+                    <label className="meal-toggle-item">
+                      <input type="checkbox" checked={cookBreakfast} onChange={(e) => updateSettings({ cookBreakfast: e.target.checked })} />
+                      <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
+                    </label>
+                    <label className="meal-toggle-item">
+                      <input type="checkbox" checked={cookLunch} onChange={(e) => updateSettings({ cookLunch: e.target.checked })} />
+                      <span><i className="bi bi-sun-fill"></i> Pranzo</span>
+                    </label>
+                    <label className="meal-toggle-item">
+                      <input type="checkbox" checked={cookDinner} onChange={(e) => updateSettings({ cookDinner: e.target.checked })} />
+                      <span><i className="bi bi-moon-fill"></i> Cena</span>
+                    </label>
+
+                    <div style={{ fontWeight: 700, marginTop: 10 }}>Quando si lavano i piatti</div>
+                    <label className="meal-toggle-item">
+                      <input type="checkbox" checked={cleanBreakfast} onChange={(e) => updateSettings({ cleanBreakfast: e.target.checked })} />
+                      <span><i className="bi bi-sunrise-fill"></i> Colazione</span>
+                    </label>
+                    <label className="meal-toggle-item">
+                      <input type="checkbox" checked={cleanLunch} onChange={(e) => updateSettings({ cleanLunch: e.target.checked })} />
+                      <span><i className="bi bi-sun-fill"></i> Pranzo</span>
+                    </label>
+                    <label className="meal-toggle-item">
+                      <input type="checkbox" checked={cleanDinner} onChange={(e) => updateSettings({ cleanDinner: e.target.checked })} />
+                      <span><i className="bi bi-moon-fill"></i> Cena</span>
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -295,6 +321,14 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="toast-notification">
+          <i className="bi bi-check-circle-fill"></i>
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

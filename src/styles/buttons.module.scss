@@ -3,7 +3,7 @@
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -65,15 +65,15 @@
 }
 
 .btnSmall {
-  padding: 6px 12px;
-  font-size: 0.85rem;
+  padding: var(--btn-padding-sm);
+  font-size: var(--font-sm);
 }
 
 .btnText {
   @extend .btn;
   background: transparent;
   color: var(--primary-color);
-  padding: 6px 12px;
+  padding: var(--btn-padding-sm);
 
   &:hover:not(:disabled) {
     background: var(--border-light);
@@ -97,6 +97,6 @@
 }
 
 .btnCompact {
-  padding: 8px 16px;
+  padding: var(--btn-padding);
   font-size: 0.9rem;
 }

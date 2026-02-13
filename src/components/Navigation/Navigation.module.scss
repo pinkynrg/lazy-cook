@@ -86,7 +86,7 @@
 
   h2 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -157,7 +157,7 @@
   font-weight: 500;
 
   i {
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     color: var(--primary-color);
   }
 }
@@ -176,7 +176,7 @@
   border-left: 4px solid transparent;
   cursor: pointer;
   text-align: left;
-  font-size: 1rem;
+  font-size: var(--font-md);
 
   i {
     font-size: 1.3rem;

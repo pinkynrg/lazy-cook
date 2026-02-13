@@ -301,6 +301,11 @@ try {
     console.log('✅ Added cleanDinner to settings');
   } catch (e) {}
 
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN enableFamilyTasks INTEGER NOT NULL DEFAULT 1;`);
+    console.log('✅ Added enableFamilyTasks to settings');
+  } catch (e) {}
+
   // Migrate legacy task types to meal-based ones used by the new UI.
   // Old app versions logged one cooking + one dishes task per day.
   // We default those to dinner.

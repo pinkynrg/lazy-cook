@@ -23,7 +23,7 @@
   order: 1;
 
   h1 {
-    font-size: 2.5rem;
+    font-size: var(--font-2xl);
     color: var(--primary-color);
     margin-bottom: 10px;
   }
@@ -45,17 +45,17 @@
   gap: 8px;
   color: var(--text-primary);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
 
   i {
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     color: var(--primary-color);
   }
 }
 
 .logoutBtn {
-  padding: 8px 12px !important;
-  font-size: 1.2rem !important;
+  padding: var(--btn-padding) !important;
+  font-size: var(--font-lg) !important;
 
   i {
     margin: 0 !important;

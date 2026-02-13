@@ -42,7 +42,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
   const [mealsOut, setMealsOut] = useState<Set<MealOutKey>>(new Set());
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [onlineSearchTerm, setOnlineSearchTerm] = useState('');
   const [pendingAssignment, setPendingAssignment] = useState<{ url: string; day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
   const [searchMode, setSearchMode] = useState<'local' | 'online'>('local');
 
@@ -79,7 +80,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
         // Recipe found, assign it
         onAddAssignment(newRecipe.id, pendingAssignment.day, pendingAssignment.meal);
         setSelectingRecipeFor(null);
-        setRecipeSearchTerm('');
+        setLocalSearchTerm('');
+        setOnlineSearchTerm('');
         setPendingAssignment(null);
       }
     }
@@ -194,7 +196,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
       
       // Close modal
       setSelectingRecipeFor(null);
-      setRecipeSearchTerm('');
+      setLocalSearchTerm('');
+      setOnlineSearchTerm('');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore durante l\'estrazione della ricetta';
       alert(errorMessage);
@@ -341,7 +344,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
 
   const closeModal = () => {
     setSelectingRecipeFor(null);
-    setRecipeSearchTerm('');
+    setLocalSearchTerm('');
+    setOnlineSearchTerm('');
   };
 
   // Helper function to render a meal cell
@@ -359,7 +363,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                 className="meal-add-btn-header"
                 onClick={() => {
                   setSelectingRecipeFor({ day: day.id, meal: mealType });
-                  setRecipeSearchTerm('');
+                  setLocalSearchTerm('');
+                  setOnlineSearchTerm('');
                   setSearchMode(recipes.length > 0 ? 'local' : 'online');
                 }}
                 title="Aggiungi ricetta"
@@ -404,7 +409,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                     className="empty-meal"
                     onClick={() => {
                       setSelectingRecipeFor({ day: day.id, meal: mealType });
-                      setRecipeSearchTerm('');
+                      setLocalSearchTerm('');
+                      setOnlineSearchTerm('');
                       setSearchMode(recipes.length > 0 ? 'local' : 'online');
                     }}
                     style={{ cursor: 'pointer' }}
@@ -467,7 +473,12 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                           )}
                           <button 
                             className="recipe-btn-remove"
-                            onClick={() => onRemoveAssignment(assignment.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Vuoi rimuovere questa ricetta dal pasto?')) {
+                                onRemoveAssignment(assignment.id);
+                              }
+                            }}
                             title="Rimuovi"
                           >
                             <i className="bi bi-trash-fill"></i>
@@ -605,14 +616,20 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                 <button
                   type="button"
                   className={`recipe-selector-tab ${searchMode === 'local' ? 'active' : ''}`}
-                  onClick={() => setSearchMode('local')}
+                  onClick={() => {
+                    setSearchMode('local');
+                    setOnlineSearchTerm('');
+                  }}
                 >
                   <i className="bi bi-book"></i> Le tue ricette
                 </button>
                 <button
                   type="button"
                   className={`recipe-selector-tab ${searchMode === 'online' ? 'active' : ''}`}
-                  onClick={() => setSearchMode('online')}
+                  onClick={() => {
+                    setSearchMode('online');
+                    setLocalSearchTerm('');
+                  }}
                 >
                   <i className="bi bi-search"></i> Cerca online
                 </button>
@@ -621,8 +638,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
               {searchMode === 'online' ? (
                 <div className="recipe-selector-section">
                   <OnlineRecipeSearch
-                    searchTerm={recipeSearchTerm}
-                    onSearchTermChange={setRecipeSearchTerm}
+                    searchTerm={onlineSearchTerm}
+                    onSearchTermChange={setOnlineSearchTerm}
                     onSelectRecipe={handleSelectSearchResult}
                     placeholder="Cerca ricette online..."
                     className="recipe-selector-online-search"
@@ -633,8 +650,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                   <input
                     type="text"
                     placeholder="Filtra le tue ricette..."
-                    value={recipeSearchTerm}
-                    onChange={(e) => setRecipeSearchTerm(e.target.value)}
+                    value={localSearchTerm}
+                    onChange={(e) => setLocalSearchTerm(e.target.value)}
                     className="recipe-search-input"
                   />
                   
@@ -643,7 +660,7 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                       <div className="recipe-selector-list">
                         {recipes
                           .filter(recipe => 
-                            !recipeSearchTerm || (recipe.name && recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                            !localSearchTerm || (recipe.name && recipe.name.toLowerCase().includes(localSearchTerm.toLowerCase()))
                           )
                           .map(recipe => (
                             <button
@@ -669,11 +686,11 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
                             </button>
                           ))}
                         {recipes.filter(recipe => 
-                          !recipeSearchTerm || (recipe.name && recipe.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
-                        ).length === 0 && recipeSearchTerm && (
+                          !localSearchTerm || (recipe.name && recipe.name.toLowerCase().includes(localSearchTerm.toLowerCase()))
+                        ).length === 0 && localSearchTerm && (
                           <div className="recipe-selector-empty">
                             <p style={{ color: 'var(--text-secondary)' }}>
-                              Nessuna ricetta trovata per &quot;{recipeSearchTerm}&quot;
+                              Nessuna ricetta trovata per &quot;{localSearchTerm}&quot;
                             </p>
                           </div>
                         )}

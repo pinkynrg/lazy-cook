@@ -6,6 +6,7 @@
 
 .onlineSearchInputWrapper {
   display: flex;
+  align-items: stretch;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -16,15 +17,14 @@
   }
 
   .searchButton {
-    width: 44px !important;
-    height: 44px !important;
+    min-width: 44px;
   }
 }
 
 .searchButton {
-  width: 48px !important;
-  height: 48px !important;
-  padding: 0 !important;
+  min-width: 48px;
+  height: auto;
+  padding: var(--btn-padding);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,10 +33,10 @@
 
 .onlineSearchInput {
   flex: 1;
-  padding: 0.75rem;
+  padding: var(--input-padding);
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: var(--font-md);
   background: var(--bg-secondary);
   color: var(--text);
   
@@ -47,7 +47,6 @@
 }
 
 .onlineSearchResults {
-  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
   display: grid;
@@ -111,7 +110,7 @@
   background: var(--bg);
   border-radius: 6px;
   flex-shrink: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-xl);
   color: var(--text-secondary);
 }
 
@@ -126,7 +125,7 @@
   text-align: center;
   padding: 1rem;
   color: var(--text-secondary);
-  font-size: 1.5rem;
+  font-size: var(--font-xl);
   height: 3.5rem;
   display: flex;
   align-items: center;

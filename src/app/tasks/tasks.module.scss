@@ -16,7 +16,7 @@
   h2 {
     margin: 0 0 20px 0;
     color: var(--text-primary);
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     font-weight: 700;
   }
 }
@@ -35,16 +35,16 @@
   label {
     font-weight: 500;
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: var(--font-base);
   }
 
   select {
-    padding: 8px 12px;
+    padding: var(--input-padding);
     border: 1px solid var(--border);
     border-radius: 8px;
     background: white;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: var(--font-base);
   }
 }
 
@@ -63,7 +63,7 @@
   h2 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     font-weight: 700;
   }
 }
@@ -149,7 +149,7 @@
 .userName {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -178,7 +178,7 @@
 
 .percentage {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   min-width: 45px;
   text-align: right;
@@ -207,7 +207,7 @@
   color: white;
   padding: 6px 14px;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
   white-space: nowrap;
@@ -219,7 +219,7 @@
   h2 {
     margin: 0 0 8px 0;
     color: #dc2626;
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     font-weight: 700;
     padding: 0 24px;
   }
@@ -228,7 +228,7 @@
 .missingTasksDesc {
   color: var(--text-secondary);
   margin: 0 0 16px 0;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   padding: 0 24px;
 }
 
@@ -282,7 +282,7 @@
   border-right: 1px solid #fee2e2;
 
   .taskIcon {
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     flex-shrink: 0;
   }
 }
@@ -296,11 +296,11 @@
 .taskName {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: var(--font-base);
 }
 
 .taskDate {
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
   color: var(--text-secondary);
 }
 
@@ -323,7 +323,7 @@
   border: 2px solid #22c55e;
   background: white;
   color: #22c55e;
-  font-size: 1.5rem;
+  font-size: var(--font-xl);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -399,19 +399,19 @@
 }
 
 .mobileTaskIcon {
-  font-size: 2.5rem;
+  font-size: var(--font-2xl);
   flex-shrink: 0;
 }
 
 .mobileTaskName {
-  font-size: 1.2rem;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .mobileTaskDate {
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   color: #dc2626;
   font-weight: 600;
 }
@@ -472,7 +472,7 @@
   border: 2px solid #94a3b8;
   background: white;
   color: #64748b;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -508,7 +508,7 @@
   h2 {
     margin: 0 0 20px 0;
     color: var(--text-primary);
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
     font-weight: 700;
     padding: 0 24px;
   }
@@ -540,7 +540,7 @@
 
   .gridHeaderCell {
     padding: 12px 8px;
-    font-size: 0.85rem;
+    font-size: var(--font-sm);
   }
 
   .gridTaskCell {
@@ -601,11 +601,11 @@
   }
 
   .taskIcon {
-    font-size: 1.5rem;
+    font-size: var(--font-xl);
   }
 
   .taskLabel {
-    font-size: 1rem;
+    font-size: var(--font-md);
   }
 
   .userBar {
@@ -623,7 +623,7 @@
 
   .countBadge {
     padding: 3px 10px;
-    font-size: 0.85rem;
+    font-size: var(--font-sm);
     min-width: 28px;
   }
 

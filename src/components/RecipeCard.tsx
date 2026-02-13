@@ -112,7 +112,15 @@ export default function RecipeCard({
       <div className="recipe-card-actions">
         <button
           className="recipe-btn-remove"
-          onClick={() => onRemove(assignment?.id || recipe.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            const message = assignment 
+              ? 'Vuoi rimuovere questa ricetta dal pasto?' 
+              : `Vuoi eliminare "${recipe.name}" dalla tua raccolta?`;
+            if (window.confirm(message)) {
+              onRemove(assignment?.id || recipe.id);
+            }
+          }}
           title="Rimuovi"
         >
           <i className="bi bi-trash"></i>

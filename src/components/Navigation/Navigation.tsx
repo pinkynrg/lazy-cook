@@ -10,19 +10,25 @@ interface NavigationProps {
   currentUser: { username: string } | null;
   onLogout: () => void;
   onOpenHouseholds: () => void;
+  enableFamilyTasks?: boolean;
 }
 
-export default function Navigation({ currentUser, onLogout, onOpenHouseholds }: NavigationProps) {
+export default function Navigation({ currentUser, onLogout, onOpenHouseholds, enableFamilyTasks = true }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  const menuItems = [
+  const allMenuItems = [
     { href: '/', label: 'Piano Pasti', icon: 'bi-calendar-week' },
     { href: '/recipes', label: 'Le Mie Ricette', icon: 'bi-book' },
     { href: '/grocery', label: 'Lista Spesa', icon: 'bi-cart3' },
     { href: '/tasks', label: 'Task Familiari', icon: 'bi-check2-square' },
     { href: '/settings', label: 'Impostazioni', icon: 'bi-gear' },
   ];
+
+  // Filter out tasks if disabled
+  const menuItems = allMenuItems.filter(item => 
+    item.href !== '/tasks' || enableFamilyTasks
+  );
 
   return (
     <>

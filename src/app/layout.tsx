@@ -16,20 +16,33 @@ export default function RootLayout({
   const [currentUser, setCurrentUser] = useState<{ username: string } | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showHouseholdManager, setShowHouseholdManager] = useState(false);
+  const [enableFamilyTasks, setEnableFamilyTasks] = useState(true);
 
   const isAuthPage = pathname?.startsWith('/auth/');
 
   useEffect(() => {
     setIsMounted(true);
     loadCurrentUser();
+    loadSettings();
   }, []);
 
   // Reload user when pathname changes (e.g., after login)
   useEffect(() => {
     if (isMounted && !isAuthPage) {
       loadCurrentUser();
+      loadSettings();
     }
   }, [pathname, isMounted, isAuthPage]);
+
+  // Listen for settings updates from other components
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      loadSettings();
+    };
+    
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+  }, []);
 
   const loadCurrentUser = async () => {
     try {
@@ -40,6 +53,18 @@ export default function RootLayout({
       }
     } catch (error) {
       console.error('Error loading user:', error);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/settings');
+      if (response.ok) {
+        const data = await response.json();
+        setEnableFamilyTasks(data.enableFamilyTasks !== undefined ? data.enableFamilyTasks : true);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
     }
   };
 
@@ -67,6 +92,7 @@ export default function RootLayout({
             currentUser={currentUser}
             onLogout={handleLogout}
             onOpenHouseholds={() => setShowHouseholdManager(true)}
+            enableFamilyTasks={enableFamilyTasks}
           />
         )}
         {children}
