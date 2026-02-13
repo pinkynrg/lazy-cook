@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import type { Recipe, RecipeDayAssignment } from '@/types/recipe';
 import OnlineRecipeSearch from '@/components/OnlineRecipeSearch/OnlineRecipeSearch';
+import NutritionModal from '@/components/NutritionModal/NutritionModal';
+import { calculateDailyNutrition, type DailyNutrition, type MealNutrition } from '@/lib/nutritionUtils';
 
 interface WeeklyPlannerProps {
   recipes: Recipe[];
@@ -46,6 +48,8 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
   const [onlineSearchTerm, setOnlineSearchTerm] = useState('');
   const [pendingAssignment, setPendingAssignment] = useState<{ url: string; day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
   const [searchMode, setSearchMode] = useState<'local' | 'online'>('local');
+  const [nutritionModalOpen, setNutritionModalOpen] = useState(false);
+  const [selectedDayNutrition, setSelectedDayNutrition] = useState<{ dayName: string; total: DailyNutrition; meals: MealNutrition[] } | null>(null);
 
   // Load eating out status from database on mount and when recipes change
   useEffect(() => {
@@ -232,6 +236,44 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
         }
       }, 100);
     }
+  };
+
+  const handleNutritionClick = (dayId: number) => {
+    const day = DAYS.find(d => d.id === dayId);
+    if (!day) return;
+
+    // Get all assignments for this day
+    const allAssignments = recipes.flatMap(r => r.assignments || []);
+    
+    // Calculate nutrition for the day
+    const { total, meals, hasEatingOut } = calculateDailyNutrition(recipes, allAssignments, dayId);
+    
+    // Don't show modal if day is completely eating out or has no meals
+    if ((hasEatingOut && meals.length === 0) || (!total.hasData && meals.length === 0)) {
+      return;
+    }
+
+    setSelectedDayNutrition({
+      dayName: day.name,
+      total,
+      meals,
+    });
+    setNutritionModalOpen(true);
+  };
+
+  const shouldShowNutritionIcon = (dayId: number): boolean => {
+    // Get all assignments for this day
+    const allAssignments = recipes.flatMap(r => r.assignments || []);
+    const dayAssignments = allAssignments.filter(a => a.dayOfWeek === dayId);
+    
+    // Don't show if no assignments
+    if (dayAssignments.length === 0) return false;
+    
+    // Don't show if all meals are eating out
+    const allEatingOut = dayAssignments.every(a => a.eatingOut === 1);
+    if (allEatingOut) return false;
+    
+    return true;
   };
 
   const _handleDragStart = (e: React.DragEvent, recipeId: number) => {
@@ -537,6 +579,16 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
           {DAYS.map(day => (
             <div key={day.id} className="day-header-cell">
               <div className="day-name">{day.name}</div>
+              {shouldShowNutritionIcon(day.id) && (
+                <button 
+                  className="nutrition-icon-btn" 
+                  onClick={() => handleNutritionClick(day.id)}
+                  type="button"
+                  title="Vedi nutrizione"
+                >
+                  <i className="bi bi-heart-pulse"></i>
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -576,9 +628,24 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
               onClick={() => toggleDay(day.id)}
             >
               <div className="day-name">{day.name}</div>
-              <button className="day-toggle-btn" type="button">
-                <i className={`bi bi-chevron-${expandedDay === day.id ? 'down' : 'right'}`}></i>
-              </button>
+              <div className="day-header-actions">
+                {shouldShowNutritionIcon(day.id) && (
+                  <button 
+                    className="nutrition-icon-btn-mobile" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNutritionClick(day.id);
+                    }}
+                    type="button"
+                    title="Vedi nutrizione"
+                  >
+                    <i className="bi bi-heart-pulse"></i>
+                  </button>
+                )}
+                <button className="day-toggle-btn" type="button">
+                  <i className={`bi bi-chevron-${expandedDay === day.id ? 'down' : 'right'}`}></i>
+                </button>
+              </div>
             </div>
             
             {expandedDay === day.id && (
@@ -708,6 +775,20 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
             </div>
           </div>
         </div>
+      )}
+
+      {/* Nutrition Modal */}
+      {selectedDayNutrition && (
+        <NutritionModal
+          isOpen={nutritionModalOpen}
+          onClose={() => {
+            setNutritionModalOpen(false);
+            setSelectedDayNutrition(null);
+          }}
+          dayName={selectedDayNutrition.dayName}
+          total={selectedDayNutrition.total}
+          meals={selectedDayNutrition.meals}
+        />
       )}
     </div>
   );

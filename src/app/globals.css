@@ -1787,10 +1787,16 @@ h2 {
 .day-header-cell {
   border-radius: var(--space-3) var(--space-3) 0 0;
   border: 1px solid var(--border);
-  padding: var(--space-4) var(--space-2);
+  padding: var(--space-4) var(--space-3);
   text-align: center;
   min-width: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  position: relative;
 }
 
 .day-header-cell .day-name {
@@ -1800,6 +1806,34 @@ h2 {
   letter-spacing: var(--space-0);
   text-transform: uppercase;
   text-shadow: none;
+  white-space: nowrap;
+}
+
+.nutrition-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4caf50;
+  font-size: var(--font-md);
+  padding: var(--space-1);
+  border-radius: var(--space-1);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-7);
+  height: var(--space-7);
+  flex-shrink: 0;
+}
+
+.nutrition-icon-btn:hover {
+  background: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+  transform: scale(1.1);
+}
+
+.nutrition-icon-btn:active {
+  transform: scale(0.95);
 }
 
 .meal-cell {
@@ -1857,6 +1891,38 @@ h2 {
     font-size: var(--space-4);
     font-weight: 700;
     text-shadow: none;
+  }
+
+  .day-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .nutrition-icon-btn-mobile {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #4caf50;
+    font-size: var(--font-md);
+    padding: var(--space-1);
+    border-radius: var(--space-1);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-8);
+    height: var(--space-8);
+  }
+
+  .nutrition-icon-btn-mobile:hover {
+    background: rgba(76, 175, 80, 0.1);
+    color: #388e3c;
+    transform: scale(1.1);
+  }
+
+  .nutrition-icon-btn-mobile:active {
+    transform: scale(0.95);
   }
   
   .day-toggle-btn {

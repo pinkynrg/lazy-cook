@@ -74,6 +74,18 @@ export interface GroceryItem {
   }>;
 }
 
+export interface NutritionInformation {
+  calories?: string;
+  proteinContent?: string;
+  carbohydrateContent?: string;
+  sugarContent?: string;
+  fatContent?: string;
+  saturatedFatContent?: string;
+  fiberContent?: string;
+  cholesterolContent?: string;
+  sodiumContent?: string;
+}
+
 export interface JsonLdRecipe {
   '@context': string;
   '@type': string;
@@ -86,4 +98,16 @@ export interface JsonLdRecipe {
   recipeIngredient: string[];
   recipeInstructions?: string | string[] | Array<{text?: string; '@type'?: string}>;
   url?: string;
+  nutrition?: NutritionInformation | {
+    '@type': 'NutritionInformation';
+    calories?: string;
+    proteinContent?: string;
+    carbohydrateContent?: string;
+    sugarContent?: string;
+    fatContent?: string;
+    saturatedFatContent?: string;
+    fiberContent?: string;
+    cholesterolContent?: string;
+    sodiumContent?: string;
+  };
 }

@@ -282,6 +282,154 @@ export default function RecipeModal({ recipe, onClose, onUpdateServings, onUpdat
                 </div>
               </div>
 
+              {/* Nutrition Information */}
+              {recipe.jsonldSource?.nutrition && (
+                <div style={{
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)',
+                  borderRadius: '8px',
+                  border: '1px solid #a5d6a7',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '12px',
+                    color: '#2e7d32'
+                  }}>
+                    <i className="bi bi-heart-pulse" style={{ fontSize: '1.2rem' }}></i>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>Informazioni Nutrizionali (per porzione)</h4>
+                  </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                    gap: '12px'
+                  }}>
+                    {recipe.jsonldSource.nutrition.calories && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Calorie
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.calories}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.proteinContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Proteine
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.proteinContent}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.carbohydrateContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Carboidrati
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.carbohydrateContent}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.fatContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Grassi
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.fatContent}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.fiberContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Fibre
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.fiberContent}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.sugarContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Zuccheri
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.sugarContent}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.sodiumContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Sodio
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.sodiumContent}
+                        </div>
+                      </div>
+                    )}
+                    {recipe.jsonldSource.nutrition.saturatedFatContent && (
+                      <div style={{
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #c8e6c9'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#558b2f', marginBottom: '2px', fontWeight: '500' }}>
+                          Grassi saturi
+                        </div>
+                        <div style={{ fontWeight: '700', color: '#2e7d32' }}>
+                          {recipe.jsonldSource.nutrition.saturatedFatContent}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {recipe.url && !recipe.url.startsWith('manual://') ? (
                 <div style={{
                   padding: '12px 16px',

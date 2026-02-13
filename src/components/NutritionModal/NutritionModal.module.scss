@@ -1,0 +1,312 @@
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-5);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: white;
+  border-radius: var(--space-3);
+  box-shadow: 0 var(--space-5) var(--space-15) rgba(0, 0, 0, 0.3);
+  max-width: var(--space-160);
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-8));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.header h3 i {
+  color: #4caf50;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-lg);
+  width: var(--space-8);
+  height: var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--space-2);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.content {
+  padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.noData {
+  text-align: center;
+  padding: var(--space-10) var(--space-5);
+  color: var(--text-secondary);
+}
+
+.noData i {
+  font-size: var(--font-2xl);
+  color: var(--border);
+  margin-bottom: var(--space-3);
+}
+
+.noData p {
+  margin: 0;
+  font-size: var(--font-base);
+}
+
+.summary {
+  margin-bottom: var(--space-6);
+}
+
+.summary h4 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-md);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.nutritionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--space-60), 1fr));
+  gap: var(--space-4);
+}
+
+.nutritionItem {
+  background: var(--background);
+  padding: var(--space-4);
+  border-radius: var(--space-2);
+  border: 1px solid var(--border);
+}
+
+.nutritionLabel {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.nutritionValue {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.target {
+  font-size: var(--font-sm);
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.progressBar {
+  height: var(--space-2);
+  background: var(--border-light);
+  border-radius: var(--space-1);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.progressFill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: var(--space-1);
+}
+
+.progressFill.excellent {
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+}
+
+.progressFill.good {
+  background: linear-gradient(90deg, #ff9800, #ffa726);
+}
+
+.progressFill.low {
+  background: linear-gradient(90deg, #f44336, #ef5350);
+}
+
+.progressFill.high {
+  background: linear-gradient(90deg, #ff9800, #ffa726);
+}
+
+.percentage {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  text-align: right;
+  font-weight: 600;
+}
+
+.meals {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.meals h4 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-md);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.meal {
+  background: var(--card-bg);
+  padding: var(--space-4);
+  border-radius: var(--space-2);
+  border: 1px solid var(--border);
+  margin-bottom: var(--space-3);
+}
+
+.meal:last-child {
+  margin-bottom: 0;
+}
+
+.mealHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.mealType {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.mealName {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.mealNutrition {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.mealNutrition span {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .modal {
+    max-width: 100%;
+    max-height: 90vh;
+  }
+
+  .header {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .header h3 {
+    font-size: var(--font-md);
+  }
+
+  .content {
+    padding: var(--space-4);
+  }
+
+  .nutritionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .mealNutrition {
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .backdrop {
+    padding: 0;
+    background: white;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .modal {
+    max-width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .header {
+    padding: var(--space-4);
+    background: var(--card-bg);
+  }
+
+  .content {
+    padding: var(--space-4);
+  }
+
+  .summary, .meals {
+    margin-bottom: var(--space-4);
+  }
+}
