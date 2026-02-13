@@ -1,29 +1,29 @@
 // Saved Plans Component
 .savedPlansCompact {
   background: white;
-  border-radius: 16px;
+  border-radius: var(--space-4);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 var(--space-1) var(--space-5) rgba(0, 0, 0, 0.1);
 }
 
 .savedPlansSection {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: var(--space-4);
+  padding: var(--space-6);
+  box-shadow: 0 var(--space-1) var(--space-5) rgba(0, 0, 0, 0.1);
 }
 
 .savedPlansHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .savedPlansTitleWrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 
   h3 {
     margin: 0;
@@ -35,46 +35,46 @@
 .planSaveSection {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .planNameInputWrapper {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 
 .planNameInput,
 .planNameInputCompact {
   flex: 1;
-  padding: 10px 14px;
+  padding: var(--space-3) var(--space-4);
   border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: var(--space-2);
+  font-size: var(--space-4);
   transition: all 0.2s ease;
 
   &:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(91, 71, 209, 0.1);
+    box-shadow: 0 0 0 var(--space-1) rgba(91, 71, 209, 0.1);
   }
 }
 
 .savedPlansActions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .savedPlansContent {
-  margin-top: 20px;
+  margin-top: var(--space-5);
 }
 
 .savedPlansList,
 .savedPlansListCompact {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .savedPlanCard,
@@ -82,16 +82,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: var(--space-4);
   background: var(--border-light);
-  border-radius: 10px;
+  border-radius: var(--space-3);
   border: 1px solid var(--border);
   transition: all 0.2s ease;
 
   &:hover {
     background: white;
     border-color: var(--primary-color);
-    transform: translateX(4px);
+    transform: translateX(var(--space-1));
   }
 }
 
@@ -99,7 +99,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .savedPlanName {
@@ -108,15 +108,15 @@
   font-size: var(--font-md);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .savedPlanDate {
-  font-size: 0.8rem;
+  font-size: var(--space-3);
   color: var(--text-secondary);
 }
 
 .savedPlanActions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }

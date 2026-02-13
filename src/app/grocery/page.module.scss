@@ -1,23 +1,23 @@
 // Grocery Page
 .pageContainer {
-  max-width: 900px;
+  max-width: var(--space-240);
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .pageHeader {
-  margin-bottom: 30px;
-  padding: 20px 0;
+  margin-bottom: var(--space-8);
+  padding: var(--space-5) 0;
   text-align: center;
 
   h1 {
     font-size: var(--font-2xl);
     color: var(--primary-color);
-    margin-bottom: 10px;
+    margin-bottom: var(--space-3);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   p {
@@ -28,22 +28,22 @@
 .pageContent {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .emptyState {
   text-align: center;
-  padding: 60px 20px;
+  padding: var(--space-15) var(--space-5);
   color: var(--text-secondary);
 
   i {
-    font-size: 3rem;
+    font-size: var(--space-12);
     color: var(--border);
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
   }
 
   p {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+    font-size: var(--space-4);
+    margin-bottom: var(--space-3);
   }
 }

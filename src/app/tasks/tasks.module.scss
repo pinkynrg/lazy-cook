@@ -1,6 +1,6 @@
 // Page-level layout styles
 .pageContentPad {
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 @media (max-width: 520px) {
@@ -10,11 +10,11 @@
 }
 
 .taskActions {
-  padding: 24px 24px 24px 24px;
-  margin-bottom: 24px;
+  padding: var(--space-6) var(--space-6) var(--space-6) var(--space-6);
+  margin-bottom: var(--space-6);
 
   h2 {
-    margin: 0 0 20px 0;
+    margin: 0 0 var(--space-5) 0;
     color: var(--text-primary);
     font-size: var(--font-xl);
     font-weight: 700;
@@ -23,14 +23,14 @@
 
 .taskButtons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(var(--space-52), 1fr));
+  gap: var(--space-4);
 }
 
 .taskFilter {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 
   label {
     font-weight: 500;
@@ -41,7 +41,7 @@
   select {
     padding: var(--input-padding);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--space-2);
     background: white;
     cursor: pointer;
     font-size: var(--font-base);
@@ -49,16 +49,16 @@
 }
 
 .taskStats {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .statsHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 16px;
-  padding: 0 24px;
+  margin-bottom: var(--space-5);
+  gap: var(--space-4);
+  padding: 0 var(--space-6);
 
   h2 {
     margin: 0;
@@ -71,44 +71,44 @@
 .statsTable {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .taskSection {
   background: white;
-  border-radius: 16px;
+  border-radius: var(--space-4);
   overflow: hidden;
   border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 var(--space-05) var(--space-2) rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 var(--space-1) var(--space-3) rgba(0, 0, 0, 0.08);
   }
 }
 
 .taskHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-bottom: 2px solid var(--border);
 }
 
 .taskIcon {
-  font-size: 1.75rem;
+  font-size: var(--space-7);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .taskLabel {
-  font-size: 1.1rem;
+  font-size: var(--space-4);
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .userBar {
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid #f1f5f9;
   transition: all 0.3s ease;
   position: relative;
@@ -120,7 +120,7 @@
   &.needsToDoIt {
     background: linear-gradient(90deg, #fef2f2 0%, #fff 100%);
     border-left: 4px solid #ef4444;
-    padding-left: 16px;
+    padding-left: var(--space-4);
     
     .userName {
       font-weight: 700;
@@ -142,8 +142,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  gap: 12px;
+  margin-bottom: var(--space-3);
+  gap: var(--space-3);
 }
 
 .userName {
@@ -153,26 +153,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 250px;
+  max-width: var(--space-64);
 }
 
 .userStats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   flex-shrink: 0;
-  min-width: 100px;
+  min-width: var(--space-24);
   justify-content: flex-end;
 }
 
 .countBadge {
   background: var(--text-primary);
   color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--space-3);
+  font-size: var(--space-4);
   font-weight: 700;
-  min-width: 32px;
+  min-width: var(--space-8);
   text-align: center;
 }
 
@@ -180,56 +180,56 @@
   color: var(--text-secondary);
   font-size: var(--font-sm);
   font-weight: 600;
-  min-width: 45px;
+  min-width: var(--space-11);
   text-align: right;
 }
 
 .barContainer {
   width: 100%;
-  height: 8px;
+  height: var(--space-2);
   background: #f1f5f9;
-  border-radius: 6px;
+  border-radius: var(--space-2);
   overflow: hidden;
   position: relative;
 }
 
 .bar {
   height: 100%;
-  border-radius: 6px;
+  border-radius: var(--space-2);
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 var(--space-025) var(--space-05) rgba(255, 255, 255, 0.5);
 }
 
 .nextUpBadge {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   display: inline-block;
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-5);
   font-size: var(--font-xs);
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 var(--space-05) var(--space-2) rgba(239, 68, 68, 0.3);
   white-space: nowrap;
 }
 
 .missingTasks {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 
   h2 {
-    margin: 0 0 8px 0;
+    margin: 0 0 var(--space-2) 0;
     color: #dc2626;
     font-size: var(--font-xl);
     font-weight: 700;
-    padding: 0 24px;
+    padding: 0 var(--space-6);
   }
 }
 
 .missingTasksDesc {
   color: var(--text-secondary);
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--space-4) 0;
   font-size: var(--font-base);
-  padding: 0 24px;
+  padding: 0 var(--space-6);
 }
 
 .missingTasksMobile {
@@ -245,14 +245,14 @@
 }
 
 .gridHeaderCell {
-  padding: 16px 12px;
+  padding: var(--space-4) var(--space-3);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: var(--space-4);
   border-right: 1px solid #fecaca;
 
   &:first-child {
     text-align: left;
-    padding-left: 20px;
+    padding-left: var(--space-5);
   }
 
   &:last-child {
@@ -275,10 +275,10 @@
 }
 
 .gridTaskCell {
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   border-right: 1px solid #fee2e2;
 
   .taskIcon {
@@ -290,7 +290,7 @@
 .taskDetails {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .taskName {
@@ -305,7 +305,7 @@
 }
 
 .gridCell {
-  padding: 12px;
+  padding: var(--space-3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,9 +317,9 @@
 }
 
 .completeBtn {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: var(--space-11);
+  height: var(--space-11);
+  border-radius: var(--space-2);
   border: 2px solid #22c55e;
   background: white;
   color: #22c55e;
@@ -343,13 +343,13 @@
 }
 
 .skipBtn {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: var(--space-11);
+  height: var(--space-11);
+  border-radius: var(--space-2);
   border: 2px solid #94a3b8;
   background: white;
   color: #94a3b8;
-  font-size: 1.8rem;
+  font-size: var(--space-7);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -372,29 +372,29 @@
 // Mobile Step-by-Step Styles
 .mobileProgress {
   text-align: center;
-  padding: 12px;
+  padding: var(--space-3);
   background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
-  border-radius: 8px;
+  border-radius: var(--space-2);
   font-weight: 700;
   color: #dc2626;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
+  font-size: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .mobileTaskCard {
   background: white;
   border: 2px solid #fecaca;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+  border-radius: var(--space-3);
+  padding: var(--space-6);
+  box-shadow: 0 var(--space-1) var(--space-3) rgba(239, 68, 68, 0.1);
 }
 
 .mobileTaskHeader {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-5);
   border-bottom: 2px solid #fee2e2;
 }
 
@@ -407,7 +407,7 @@
   font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .mobileTaskDate {
@@ -418,27 +418,27 @@
 
 .mobileQuestion {
   text-align: center;
-  font-size: 1.1rem;
+  font-size: var(--space-4);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .mobileUserButtons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .mobileUserBtn {
   width: 100%;
-  padding: 16px 24px;
-  border-radius: 12px;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--space-3);
   border: 2px solid #22c55e;
   background: white;
   color: #22c55e;
-  font-size: 1.1rem;
+  font-size: var(--space-4);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -449,7 +449,7 @@
   &:hover {
     background: #22c55e;
     color: white;
-    transform: translateX(4px);
+    transform: translateX(var(--space-1));
   }
 
   &:active {
@@ -460,15 +460,15 @@
 .mobileActions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-top: 20px;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
   border-top: 2px solid #fee2e2;
 }
 
 .mobileSkipBtn {
   width: 100%;
-  padding: 14px 20px;
-  border-radius: 10px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--space-3);
   border: 2px solid #94a3b8;
   background: white;
   color: #64748b;
@@ -485,12 +485,12 @@
 
 .mobilePrevBtn {
   width: 100%;
-  padding: 12px 20px;
-  border-radius: 10px;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--space-3);
   border: 1px solid #e2e8f0;
   background: white;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--space-4);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -503,21 +503,21 @@
 
 
 .taskHistory {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 
   h2 {
-    margin: 0 0 20px 0;
+    margin: 0 0 var(--space-5) 0;
     color: var(--text-primary);
     font-size: var(--font-xl);
     font-weight: 700;
-    padding: 0 24px;
+    padding: 0 var(--space-6);
   }
 }
 
 .taskList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 @media (max-width: 768px) {
@@ -525,8 +525,8 @@
   .taskStats,
   .taskHistory,
   .missingTasks {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
   }
 
   .missingTasksGrid {
@@ -535,43 +535,43 @@
 
   .gridHeader,
   .gridRow {
-    min-width: 600px;
+    min-width: var(--space-160);
   }
 
   .gridHeaderCell {
-    padding: 12px 8px;
+    padding: var(--space-3) var(--space-2);
     font-size: var(--font-sm);
   }
 
   .gridTaskCell {
-    padding: 12px 16px;
+    padding: var(--space-3) var(--space-4);
 
     .taskIcon {
-      font-size: 1.3rem;
+      font-size: var(--space-5);
     }
   }
 
   .taskName {
-    font-size: 0.9rem;
+    font-size: var(--space-4);
   }
 
   .taskDate {
-    font-size: 0.8rem;
+    font-size: var(--space-3);
   }
 
   .gridCell {
-    padding: 8px;
+    padding: var(--space-2);
   }
 
   .completeBtn,
   .skipBtn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.3rem;
+    width: var(--space-10);
+    height: var(--space-10);
+    font-size: var(--space-5);
   }
 
   .skipBtn {
-    font-size: 1.6rem;
+    font-size: var(--space-6);
   }
 
   .taskButtons {
@@ -581,7 +581,7 @@
   .statsHeader {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-3);
 
     .taskFilter {
       width: 100%;
@@ -593,11 +593,11 @@
   }
 
   .statsTable {
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .taskHeader {
-    padding: 14px 16px;
+    padding: var(--space-4) var(--space-4);
   }
 
   .taskIcon {
@@ -609,35 +609,35 @@
   }
 
   .userBar {
-    padding: 14px 16px;
+    padding: var(--space-4) var(--space-4);
 
     &.needsToDoIt {
-      padding-left: 12px;
+      padding-left: var(--space-3);
     }
   }
 
   .userName {
-    font-size: 0.9rem;
-    max-width: 180px;
+    font-size: var(--space-4);
+    max-width: var(--space-44);
   }
 
   .countBadge {
-    padding: 3px 10px;
+    padding: var(--space-1) var(--space-3);
     font-size: var(--font-sm);
-    min-width: 28px;
+    min-width: var(--space-7);
   }
 
   .percentage {
-    font-size: 0.8rem;
+    font-size: var(--space-3);
   }
 
   .nextUpBadge {
-    margin-top: 8px;
-    font-size: 0.7rem;
-    padding: 4px 10px;
+    margin-top: var(--space-2);
+    font-size: var(--space-3);
+    padding: var(--space-1) var(--space-3);
   }
 
   .barContainer {
-    height: 6px;
+    height: var(--space-2);
   }
 }

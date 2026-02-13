@@ -1,23 +1,23 @@
 // Settings Page
 .pageContainer {
-  max-width: 800px;
+  max-width: var(--space-200);
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .pageHeader {
-  margin-bottom: 30px;
-  padding: 20px 0;
+  margin-bottom: var(--space-8);
+  padding: var(--space-5) 0;
   text-align: center;
 
   h1 {
     font-size: var(--font-2xl);
     color: var(--primary-color);
-    margin-bottom: 10px;
+    margin-bottom: var(--space-3);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   p {
@@ -28,17 +28,17 @@
 .pageContent {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .pageContentPad {
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 .nicknameInput {
   width: 100%;
   padding: var(--input-padding);
-  border-radius: 8px;
+  border-radius: var(--space-2);
   border: 1px solid var(--border);
   background: white;
   color: var(--text-primary);
@@ -49,11 +49,11 @@
 .nicknameInput:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  box-shadow: 0 0 0 var(--space-1) rgba(var(--primary-rgb), 0.1);
 }
 
 .nicknameHint {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: var(--font-sm);
   color: var(--text-secondary);
   font-style: italic;
@@ -61,6 +61,6 @@
 
 @media (max-width: 480px) {
   .pageContentPad {
-    padding: 12px;
+    padding: var(--space-3);
   }
 }
