@@ -111,6 +111,15 @@ export function calculateDailyNutrition(
 
     const mealNutrition = extractNutrition(recipe, assignment.plannedServings);
     
+    // Always add meal to the list, even if it doesn't have nutrition data
+    meals.push({
+      mealType: assignment.mealType,
+      recipeName: recipe.name || 'Unknown Recipe',
+      recipeId: recipe.id,
+      nutrition: mealNutrition,
+    });
+
+    // Only add to total if meal has nutrition data
     if (mealNutrition.hasData) {
       total.hasData = true;
       total.calories += mealNutrition.calories;
@@ -121,13 +130,6 @@ export function calculateDailyNutrition(
       total.saturatedFat += mealNutrition.saturatedFat;
       total.fiber += mealNutrition.fiber;
       total.sodium += mealNutrition.sodium;
-
-      meals.push({
-        mealType: assignment.mealType,
-        recipeName: recipe.name || 'Unknown Recipe',
-        recipeId: recipe.id,
-        nutrition: mealNutrition,
-      });
     }
   }
 

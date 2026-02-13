@@ -28,6 +28,10 @@ const NutritionModal: React.FC<NutritionModalProps> = ({ isOpen, onClose, dayNam
     dinner: '🍖 Cena',
   };
 
+  // Sort meals by meal type: breakfast, lunch, dinner
+  const mealOrder = { breakfast: 0, lunch: 1, dinner: 2 };
+  const sortedMeals = [...meals].sort((a, b) => mealOrder[a.mealType] - mealOrder[b.mealType]);
+
   return (
     <div className={styles.backdrop} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -42,7 +46,7 @@ const NutritionModal: React.FC<NutritionModalProps> = ({ isOpen, onClose, dayNam
         </div>
 
         <div className={styles.content}>
-          {!total.hasData ? (
+          {sortedMeals.length === 0 ? (
             <div className={styles.noData}>
               <i className="bi bi-info-circle"></i>
               <p>Nessun dato nutrizionale disponibile per le ricette di oggi.</p>
@@ -76,10 +80,10 @@ const NutritionModal: React.FC<NutritionModalProps> = ({ isOpen, onClose, dayNam
                 </div>
               </div>
 
-              {meals.length > 0 && (
+              {sortedMeals.length > 0 && (
                 <div className={styles.meals}>
                   <h4>Dettaglio Pasti</h4>
-                  {meals.map((meal, index) => (
+                  {sortedMeals.map((meal, index) => (
                     <div key={index} className={styles.meal}>
                       <div className={styles.mealHeader}>
                         <span className={styles.mealType}>{mealTypeLabels[meal.mealType]}</span>
