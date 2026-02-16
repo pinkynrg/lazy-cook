@@ -1237,7 +1237,8 @@ h2 {
   font-weight: 600;
   color: var(--primary-color);
   background: white;
-  min-width: var(--space-24);
+  min-width: var(--space-20);
+  max-width: var(--space-32);
   outline: none;
   box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
@@ -3640,6 +3641,28 @@ h2 {
     display: flex;
     gap: var(--space-3);
     align-items: center;
+  }
+
+  /* Grocery list edit mode mobile adjustments */
+  .edit-quantity-container {
+    flex: 1;
+    min-width: 0;
+    gap: var(--space-1);
+  }
+
+  .edit-quantity-input {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+    font-size: var(--font-sm);
+    padding: var(--space-1);
+  }
+
+  .btn-save-quantity,
+  .btn-cancel-quantity {
+    padding: var(--space-1);
+    min-width: var(--space-8);
+    flex-shrink: 0;
   }
 
   .section-header-actions .btn:not(.btn-small) {
