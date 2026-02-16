@@ -10,11 +10,14 @@ interface GroceryListProps {
   hasRecipes: boolean;
   onToggleChecked: (itemId: number | undefined, checked: boolean) => void;
   onClearList: () => void;
+  onUpdateQuantity: (itemId: number, newQuantity: string) => Promise<void>;
 }
 
-export default function GroceryList({ groceryList, onNormalize, isNormalized, hasRecipes, onToggleChecked, onClearList }: GroceryListProps) {
+export default function GroceryList({ groceryList, onNormalize, isNormalized, hasRecipes, onToggleChecked, onClearList, onUpdateQuantity }: GroceryListProps) {
   const [normalizing, setNormalizing] = useState(false);
   const [inspectingItem, setInspectingItem] = useState<GroceryItem | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [editingQuantity, setEditingQuantity] = useState<string>('');
 
   const sortedGroceryList = groceryList
     .map((item, index) => ({ item, index }))
@@ -102,6 +105,30 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
     }
   };
 
+  const handleStartEdit = (item: GroceryItem) => {
+    if (!item.id) return;
+    setEditingItemId(item.id);
+    const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
+    setEditingQuantity(quantityText);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingItemId === null) return;
+    try {
+      await onUpdateQuantity(editingItemId, editingQuantity);
+      setEditingItemId(null);
+      setEditingQuantity('');
+    } catch (error) {
+      console.error('Error saving quantity:', error);
+      alert('Errore nel salvataggio della quantità');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setEditingQuantity('');
+  };
+
   const copyGroceryList = () => {
     const text = sortedGroceryList
       .map(item => {
@@ -186,6 +213,8 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
               const quantityText = item.totalQuantity || item.quantities.filter(q => q).join(' + ') || 'q.b.';
               const hasSources = Array.isArray(item.sources) && item.sources.length > 0;
               const isDisabled = !item.id;
+              const isEditing = editingItemId === item.id;
+              
               return (
                 <div 
                   key={item.id || `${item.name}-${index}`}
@@ -205,28 +234,82 @@ export default function GroceryList({ groceryList, onNormalize, isNormalized, ha
                   <div 
                     className="grocery-item-content"
                     onClick={() => {
-                      if (item.sources && item.sources.length > 0) {
+                      if (!isEditing && item.sources && item.sources.length > 0) {
                         setInspectingItem(item);
                       }
                     }}
                   >
                     <div className="ingredient-name">{item.name}</div>
-                    <div className="ingredient-quantity">{quantityText}</div>
+                    {isEditing ? (
+                      <div className="edit-quantity-container">
+                        <input
+                          type="text"
+                          value={editingQuantity}
+                          onChange={(e) => setEditingQuantity(e.target.value)}
+                          className="edit-quantity-input"
+                          onClick={(e) => e.stopPropagation()}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveEdit();
+                            } else if (e.key === 'Escape') {
+                              handleCancelEdit();
+                            }
+                          }}
+                        />
+                        <button
+                          className="btn-save-quantity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveEdit();
+                          }}
+                          title="Salva"
+                        >
+                          <i className="bi bi-check-lg"></i>
+                        </button>
+                        <button
+                          className="btn-cancel-quantity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelEdit();
+                          }}
+                          title="Annulla"
+                        >
+                          <i className="bi bi-x-lg"></i>
+                        </button>
+                      </div>
+                    ) : (
+                      <div 
+                        className="ingredient-quantity"
+                        onClick={(e) => {
+                          if (!isDisabled) {
+                            e.stopPropagation();
+                            handleStartEdit(item);
+                          }
+                        }}
+                        style={{ cursor: isDisabled ? 'default' : 'pointer' }}
+                        title={isDisabled ? '' : 'Clicca per modificare'}
+                      >
+                        {quantityText}
+                      </div>
+                    )}
                   </div>
-                  <button
-                    className="btn-inspect"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Inspecting item:', item);
-                      setInspectingItem(item);
-                    }}
-                    title="Vedi dettagli"
-                    style={{ 
-                      display: hasSources ? 'block' : 'none'
-                    }}
-                  >
-                    <i className="bi bi-info-circle"></i>
-                  </button>
+                  {!isEditing && (
+                    <button
+                      className="btn-inspect"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Inspecting item:', item);
+                        setInspectingItem(item);
+                      }}
+                      title="Vedi dettagli"
+                      style={{ 
+                        display: hasSources ? 'block' : 'none'
+                      }}
+                    >
+                      <i className="bi bi-info-circle"></i>
+                    </button>
+                  )}
                 </div>
               );
             })}

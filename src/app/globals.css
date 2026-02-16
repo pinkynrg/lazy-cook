@@ -1159,6 +1159,12 @@ h2 {
   background: rgba(var(--primary-rgb), 0.12);
   padding: var(--space-05) var(--space-3);
   border-radius: var(--space-2);
+  transition: all 0.2s ease;
+}
+
+.ingredient-quantity:hover {
+  background: rgba(var(--primary-rgb), 0.18);
+  transform: scale(1.02);
 }
 
 .empty-state {
@@ -1215,6 +1221,70 @@ h2 {
 .btn-inspect:hover {
   color: var(--accent-color);
   transform: scale(1.1);
+}
+
+.edit-quantity-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.edit-quantity-input {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--space-2);
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--primary-color);
+  background: white;
+  min-width: var(--space-24);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.edit-quantity-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+}
+
+.btn-save-quantity {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  font-size: var(--font-base);
+  line-height: 1;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-save-quantity:hover {
+  background: var(--accent-color);
+  transform: scale(1.05);
+}
+
+.btn-cancel-quantity {
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  font-size: var(--font-base);
+  line-height: 1;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cancel-quantity:hover {
+  background: #4b5563;
+  transform: scale(1.05);
 }
 
 .modal-overlay {

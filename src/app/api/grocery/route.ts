@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH update single item (toggle checked)
+// PATCH update single item (toggle checked or update quantity)
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getSession();
@@ -90,10 +90,20 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, checked } = await request.json();
+    const body = await request.json();
+    const { id, checked, totalQuantity } = body;
 
-    db.prepare('UPDATE grocery_items SET checked = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND householdId = ?')
-      .run(checked ? 1 : 0, id, session.householdId);
+    // Update checked status
+    if (checked !== undefined) {
+      db.prepare('UPDATE grocery_items SET checked = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND householdId = ?')
+        .run(checked ? 1 : 0, id, session.householdId);
+    }
+
+    // Update total quantity
+    if (totalQuantity !== undefined) {
+      db.prepare('UPDATE grocery_items SET totalQuantity = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND householdId = ?')
+        .run(totalQuantity, id, session.householdId);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

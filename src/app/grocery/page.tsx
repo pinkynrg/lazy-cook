@@ -414,6 +414,30 @@ export default function GroceryPage() {
     }
   };
 
+  const updateGroceryItemQuantity = async (itemId: number, newQuantity: string) => {
+    try {
+      // Update in database
+      const response = await fetch('/api/grocery', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: itemId, totalQuantity: newQuantity }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update quantity');
+      }
+
+      // Update local state
+      const updatedList = groceryList.map(item => 
+        item.id === itemId ? { ...item, totalQuantity: newQuantity } : item
+      );
+      setGroceryList(updatedList);
+    } catch (error) {
+      console.error('Error updating grocery item quantity:', error);
+      throw error; // Re-throw to let component handle the error
+    }
+  };
+
   return (
     <div className="page-container">
       <div className="page-content">
@@ -424,6 +448,7 @@ export default function GroceryPage() {
           onNormalize={normalizeIngredients}
           onToggleChecked={toggleGroceryItemChecked}
           onClearList={clearGroceryList}
+          onUpdateQuantity={updateGroceryItemQuantity}
         />
       </div>
     </div>
