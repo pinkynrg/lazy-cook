@@ -21,6 +21,7 @@ interface WeeklyPlannerProps {
   enableBreakfast: boolean;
   enableLunch: boolean;
   enableDinner: boolean;
+  autoExpandCurrentDayMobile?: boolean;
   onMealsOutChange?: (mealsOut: Set<string>) => void;
 }
 
@@ -36,7 +37,7 @@ const DAYS = [
 
 type MealOutKey = `${number}-${'breakfast' | 'lunch' | 'dinner'}`;
 
-export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onViewRecipe, onRemoveRecipe: _onRemoveRecipe, onUpdateServings: _onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner, onMealsOutChange }: WeeklyPlannerProps) {
+export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onViewRecipe, onRemoveRecipe: _onRemoveRecipe, onUpdateServings: _onUpdateServings, onAddAssignment, onRemoveAssignment, onUpdateAssignmentServings, onMoveAssignment, onAddRecipe, onClearWeek, enableBreakfast, enableLunch, enableDinner, autoExpandCurrentDayMobile = true, onMealsOutChange }: WeeklyPlannerProps) {
   const [selectingRecipeFor, setSelectingRecipeFor] = useState<{ day: number; meal: 'breakfast' | 'lunch' | 'dinner' } | null>(null);
   const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
   const [assignmentServingsInput, setAssignmentServingsInput] = useState('');
@@ -50,6 +51,30 @@ export default function WeeklyPlanner({ recipes, onUpdateDay: _onUpdateDay, onVi
   const [searchMode, setSearchMode] = useState<'local' | 'online'>('local');
   const [nutritionModalOpen, setNutritionModalOpen] = useState(false);
   const [selectedDayNutrition, setSelectedDayNutrition] = useState<{ dayName: string; total: DailyNutrition; meals: MealNutrition[] } | null>(null);
+
+  // Auto-expand current day on mobile on mount
+  useEffect(() => {
+    if (autoExpandCurrentDayMobile) {
+      // Check if we're on mobile by checking viewport width
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        // Get current day of week (0 = Monday, 6 = Sunday)
+        const now = new Date();
+        const dayOfWeek = (now.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+        setExpandedDay(dayOfWeek);
+        
+        // Scroll to the current day
+        setTimeout(() => {
+          const element = document.getElementById(`day-${dayOfWeek}`);
+          if (element) {
+            const yOffset = -80; // Offset for header
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    }
+  }, [autoExpandCurrentDayMobile]);
 
   // Load eating out status from database on mount and when recipes change
   useEffect(() => {

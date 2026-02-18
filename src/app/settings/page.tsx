@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [enableDinner, setEnableDinner] = useState(true);
   const [currentPlanName, setCurrentPlanName] = useState('Piano Settimanale');
   const [enableFamilyTasks, setEnableFamilyTasks] = useState(true);
+  const [autoExpandCurrentDayMobile, setAutoExpandCurrentDayMobile] = useState(true);
 
   const [cookBreakfast, setCookBreakfast] = useState(false);
   const [cookLunch, setCookLunch] = useState(true);
@@ -84,6 +85,7 @@ export default function SettingsPage() {
         setEnableDinner(data.enableDinner);
         setCurrentPlanName(data.currentPlanName || 'Piano Settimanale');
         setEnableFamilyTasks(data.enableFamilyTasks !== undefined ? data.enableFamilyTasks : true);
+        setAutoExpandCurrentDayMobile(data.autoExpandCurrentDayMobile !== undefined ? data.autoExpandCurrentDayMobile : true);
 
         setCookBreakfast(!!data.cookBreakfast);
         setCookLunch(data.cookLunch !== undefined ? !!data.cookLunch : true);
@@ -105,6 +107,7 @@ export default function SettingsPage() {
       enableDinner,
       currentPlanName,
       enableFamilyTasks,
+      autoExpandCurrentDayMobile,
       cookBreakfast,
       cookLunch,
       cookDinner,
@@ -120,6 +123,7 @@ export default function SettingsPage() {
     if (updates.enableDinner !== undefined) setEnableDinner(updates.enableDinner);
     if (updates.currentPlanName !== undefined) setCurrentPlanName(updates.currentPlanName);
     if (updates.enableFamilyTasks !== undefined) setEnableFamilyTasks(updates.enableFamilyTasks);
+    if (updates.autoExpandCurrentDayMobile !== undefined) setAutoExpandCurrentDayMobile(updates.autoExpandCurrentDayMobile);
 
     if (updates.cookBreakfast !== undefined) setCookBreakfast(!!updates.cookBreakfast);
     if (updates.cookLunch !== undefined) setCookLunch(!!updates.cookLunch);
@@ -303,6 +307,26 @@ export default function SettingsPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+
+          <div className="setting-card">
+            <div className="setting-header">
+              <i className="bi bi-phone"></i>
+              <h3>Mobile</h3>
+            </div>
+            <div className="setting-body">
+              <p className="setting-description">
+                Espandi automaticamente il giorno corrente quando apri l'app su mobile
+              </p>
+              <label className="meal-toggle-item" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={autoExpandCurrentDayMobile}
+                  onChange={(e) => updateSettings({ autoExpandCurrentDayMobile: e.target.checked })}
+                />
+                <span>Espandi giorno corrente su mobile</span>
+              </label>
             </div>
           </div>
 

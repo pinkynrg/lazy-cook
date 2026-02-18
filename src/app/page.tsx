@@ -12,10 +12,21 @@ export default function Home() {
   const [enableLunch, setEnableLunch] = useState(true);
   const [enableDinner, setEnableDinner] = useState(true);
   const [familySize, setFamilySize] = useState(2);
+  const [autoExpandCurrentDayMobile, setAutoExpandCurrentDayMobile] = useState(true);
 
   useEffect(() => {
     loadRecipesFromDb();
     loadSettings();
+
+    // Listen for settings updates
+    const handleSettingsUpdate = () => {
+      loadSettings();
+    };
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+    };
   }, []);
 
   const loadSettings = async () => {
@@ -27,6 +38,7 @@ export default function Home() {
         setEnableLunch(data.enableLunch);
         setEnableDinner(data.enableDinner);
         setFamilySize(data.familySize || 2);
+        setAutoExpandCurrentDayMobile(data.autoExpandCurrentDayMobile !== undefined ? data.autoExpandCurrentDayMobile : true);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -237,6 +249,7 @@ export default function Home() {
         enableBreakfast={enableBreakfast}
         enableLunch={enableLunch}
         enableDinner={enableDinner}
+        autoExpandCurrentDayMobile={autoExpandCurrentDayMobile}
         onMealsOutChange={() => {}}
       />
 

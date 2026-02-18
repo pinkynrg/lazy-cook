@@ -28,8 +28,9 @@ export async function GET() {
           cookDinner,
           cleanBreakfast,
           cleanLunch,
-          cleanDinner
-        ) VALUES (?, 2, 0, 1, 1, ?, 1, 0, 1, 1, 0, 1, 1)
+          cleanDinner,
+          autoExpandCurrentDayMobile
+        ) VALUES (?, 2, 0, 1, 1, ?, 1, 0, 1, 1, 0, 1, 1, 1)
       `).run(session.householdId, 'Piano Settimanale');
       return NextResponse.json({ 
         familySize: 2,
@@ -38,6 +39,7 @@ export async function GET() {
         enableDinner: true,
         currentPlanName: 'Piano Settimanale',
         enableFamilyTasks: true,
+        autoExpandCurrentDayMobile: true,
         cookBreakfast: false,
         cookLunch: true,
         cookDinner: true,
@@ -54,6 +56,7 @@ export async function GET() {
       enableDinner: !!settings.enableDinner,
       currentPlanName: settings.currentPlanName || 'Piano Settimanale',
       enableFamilyTasks: settings.enableFamilyTasks !== undefined ? !!settings.enableFamilyTasks : true,
+      autoExpandCurrentDayMobile: settings.autoExpandCurrentDayMobile !== undefined ? !!settings.autoExpandCurrentDayMobile : true,
       cookBreakfast: !!settings.cookBreakfast,
       cookLunch: !!settings.cookLunch,
       cookDinner: !!settings.cookDinner,
@@ -93,6 +96,7 @@ async function updateSettings(request: NextRequest) {
       enableDinner,
       currentPlanName,
       enableFamilyTasks,
+      autoExpandCurrentDayMobile,
       cookBreakfast,
       cookLunch,
       cookDinner,
@@ -135,6 +139,10 @@ async function updateSettings(request: NextRequest) {
     if (enableFamilyTasks !== undefined) {
       updates.push('enableFamilyTasks = ?');
       params.push(enableFamilyTasks ? 1 : 0);
+    }
+    if (autoExpandCurrentDayMobile !== undefined) {
+      updates.push('autoExpandCurrentDayMobile = ?');
+      params.push(autoExpandCurrentDayMobile ? 1 : 0);
     }
 
     if (cookBreakfast !== undefined) {
